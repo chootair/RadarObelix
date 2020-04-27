@@ -10,7 +10,7 @@
 #include <QDateTime>
 
 #include "Obelix.h"
-#include "GreenPresistImage.h"
+#include "PresistImage.h"
 
 
 typedef struct _T_FifoHandler

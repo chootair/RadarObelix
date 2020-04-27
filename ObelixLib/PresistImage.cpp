@@ -1,4 +1,4 @@
-#include "GreenPresistImage.h"
+#include "PresistImage.h"
 
 void CalcPresistence(int pStartIxd, int pStopIdx, QImage* pImageSrc, QImage &pImageAdd, double pPersistenceRatio)
 {
