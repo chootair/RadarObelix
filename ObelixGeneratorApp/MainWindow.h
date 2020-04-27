@@ -15,6 +15,8 @@ typedef struct _T_Track
 {
   double Azimuht;
   double Range;
+  double Course;
+  double Speed;
 }T_Track;
 
 

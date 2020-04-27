@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>292</width>
+    <width>298</width>
     <height>651</height>
    </rect>
   </property>
@@ -210,12 +210,7 @@
         <widget class="QComboBox" name="cbxVideoMode">
          <item>
           <property name="text">
-           <string>None</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Tracking</string>
+           <string>Search</string>
           </property>
          </item>
          <item>
@@ -225,7 +220,7 @@
          </item>
          <item>
           <property name="text">
-           <string>Random</string>
+           <string>Test</string>
           </property>
          </item>
         </widget>

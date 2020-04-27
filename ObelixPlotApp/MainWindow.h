@@ -3,7 +3,6 @@
 
 #include <QMainWindow>
 #include <QTimer>
-#include "ObelixUdpReader.h"
 
 namespace Ui {
 class MainWindow;
@@ -18,22 +17,18 @@ public:
   ~MainWindow();
 
 private slots:
-  void on_pbxRun_clicked(bool checked);
+
   void OnTimerTick();
-
   void on_pbxClearScope_clicked();
-
   void on_sbxPresistance_valueChanged(double arg1);
-
   void on_doubleSpinBox_valueChanged(double arg1);
+  void on_sbxDisplayPxKtsRatio_valueChanged(double arg1);
+  void on_pbxStart_clicked();
+  void on_pbxStop_clicked();
 
 private:
   Ui::MainWindow *ui;
-  //
-    QTimer* mTimer;
-  //
-  ObelixUdpReader* mObelixVideoReader;
-  ObelixUdpReader* mObelixTrackReader;
+  QTimer* mTimer;
 };
 
 #endif // MAINWINDOW_H

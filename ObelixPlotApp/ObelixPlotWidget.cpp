@@ -39,7 +39,8 @@ ObelixPlotWidget::ObelixPlotWidget(QWidget *parent) : QOpenGLWidget(parent)
 
 
   
-  mScopeVideoImg    = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
+  mScopeVideoImg = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
+  mScopeTrackImg = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
   mWidgetImg     = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
   
   mPersistImg = new GreenPresistImage(800,800);
@@ -61,9 +62,21 @@ ObelixPlotWidget::ObelixPlotWidget(QWidget *parent) : QOpenGLWidget(parent)
   mElapsedTime = 0;
 
   mLastAzimuthDeg = 0;
+
+
+
+  mDisplayPxKtsRatio = 1;
   
   
   mRangeNm = 100;
+
+
+  mDisplayAntenna = true;
+  mDisplayRangeLimit = true;
+  mDisplayRangeRings = true;
+  mDisplayCompas = true;
+  mDisplayVideo = true;
+  mDisplayTracks = true;
 }
 
 ObelixPlotWidget::~ObelixPlotWidget()
@@ -105,6 +118,10 @@ void ObelixPlotWidget::ClearScope()
 {
   mWidgetImg->fill(0xFF000000);
   mScopeVideoImg->fill(0xFF000000);
+  mScopeTrackImg->fill(0x00000000);
+
+  //
+  RefreshScope();
 }
 
 void ObelixPlotWidget::SetPresistenceRatio(double pRatio)
@@ -148,28 +165,29 @@ void ObelixPlotWidget::SetMyGeometry()
   //
   delete mScopeVideoImg;
   mScopeVideoImg = new QImage(2*mPlotRad, 2*mPlotRad, QImage::Format_ARGB32_Premultiplied);
-  
+  //
+  delete mScopeTrackImg;
+  mScopeTrackImg = new QImage(width(), height(), QImage::Format_ARGB32_Premultiplied);
+
   // Reset images
   mWidgetImg->fill(0xFF000000);
   mScopeVideoImg->fill(0xFF000000);
+  mScopeTrackImg->fill(0x00000000);
 }
 
 void ObelixPlotWidget::PaintVideoCells(QPainter *pPainter)
 {
-
-
   pPainter->setPen(Qt::NoPen);
   QBrush lBrush(Qt::black);
   
   // Lock FIFO
   mFifoObelixVideo.mFifoLocker->lockForWrite();
   
-  //qDebug("%i message to plot", *mFifoIndexPtr);
+  // FIFO Load
   mFifoObelixVideoLoad = *(mFifoObelixVideo.mFifoIndexPtr)/(float)mFifoObelixVideo.mFifoSize*100.0;
-  
-  //qDebug("%i %i %i",mFifoObelixVideoLoad, *mFifoIndexPtr, mFifoSize);
-  
 
+  
+  // Reset antenna position
   if (*(mFifoObelixVideo.mFifoIndexPtr) >= 1)
   {
     mLastAzimuthDeg = 0;
@@ -199,8 +217,69 @@ void ObelixPlotWidget::PaintVideoCells(QPainter *pPainter)
       mCellPt[2].setX(mPlotRad + mPlotRad/mRangeNm*(mFifoVideoPtr[i].StartRgNm + lIdxCell*mFifoVideoPtr[i].CellWidthNm)*lSinEnd);
       mCellPt[2].setY(mPlotRad - mPlotRad/mRangeNm*(mFifoVideoPtr[i].StartRgNm + lIdxCell*mFifoVideoPtr[i].CellWidthNm)*lCosEnd);
       
-      //
-      lBrush.setColor(QColor(0,mFifoVideoPtr[i].CellValueTbl[lIdxCell-1],0));
+      // Fill cell according radar mode
+      if (mFifoVideoPtr[i].VideoMode == OBX_VIDEO_SEARCH)
+      {
+        lBrush.setColor(QColor(0,mFifoVideoPtr[i].CellValueTbl[lIdxCell-1],0));
+      }
+      else if (mFifoVideoPtr[i].VideoMode == OBX_VIDEO_WEATHER)
+      {
+        QColor lWeatherColor = Qt::black;
+
+        // Weather color scale
+        if (mFifoVideoPtr[i].CellValueTbl[lIdxCell-1] < 10)
+        {
+          lWeatherColor = Qt::black;
+        }
+        if (mFifoVideoPtr[i].CellValueTbl[lIdxCell-1] < 20)
+        {
+          lWeatherColor = Qt::cyan;
+        }
+        else if (mFifoVideoPtr[i].CellValueTbl[lIdxCell-1] < 30)
+        {
+          lWeatherColor = Qt::blue;
+        }
+        else if (mFifoVideoPtr[i].CellValueTbl[lIdxCell-1] < 40)
+        {
+          lWeatherColor = Qt::green;
+        }
+        else if (mFifoVideoPtr[i].CellValueTbl[lIdxCell-1] < 50)
+        {
+          lWeatherColor = Qt::darkGreen;
+        }
+        else if (mFifoVideoPtr[i].CellValueTbl[lIdxCell-1] < 60)
+        {
+          lWeatherColor = Qt::yellow;
+        }
+        else if (mFifoVideoPtr[i].CellValueTbl[lIdxCell-1] < 70)
+        {
+          lWeatherColor = Qt::darkYellow;
+        }
+        else if (mFifoVideoPtr[i].CellValueTbl[lIdxCell-1] < 80)
+        {
+          lWeatherColor = QColor(255,165,0); // Orange
+        }
+        else if (mFifoVideoPtr[i].CellValueTbl[lIdxCell-1] < 90)
+        {
+          lWeatherColor = Qt::red;
+        }
+        else if (mFifoVideoPtr[i].CellValueTbl[lIdxCell-1] < 100)
+        {
+          lWeatherColor = Qt::darkRed;
+        }
+        else
+        {
+          lWeatherColor = Qt::magenta;
+        }
+
+        //
+        lBrush.setColor(lWeatherColor);
+      }
+      else
+      {
+        /// \todo No Brush ?
+      }
+
       
       //
       pPainter->setBrush(lBrush);
@@ -226,7 +305,6 @@ void ObelixPlotWidget::PaintTrackPlots(QPainter *pPainter)
   pPainter->setBrush(Qt::NoBrush);
 
 
-  QDateTime lNow = QDateTime::currentDateTime();
   QPoint lTrackPt;
   QPoint lVectorPt;
 
@@ -240,20 +318,32 @@ void ObelixPlotWidget::PaintTrackPlots(QPainter *pPainter)
 
     /// \todo Add LSB
     /// \todo Add Speed display factor
-
+    ///
+    ///
 
     // Track Position
-    lTrackPt.setX(width()/2 + mPlotRad/mRangeNm*lPlotTrack.Track.DistanceNm * sin(lPlotTrack.Track.BearingDeg*DEG_TO_RAD));
-    lTrackPt.setY(height()/2 - mPlotRad/mRangeNm*lPlotTrack.Track.DistanceNm * cos(lPlotTrack.Track.BearingDeg*DEG_TO_RAD));
+    double lTrackRangePx    = mPlotRad/mRangeNm*lPlotTrack.Track.Distance*OBX_TRK_DISTANCE_LSB;
+    double lTrackBreaingRad = static_cast<double>(lPlotTrack.Track.Bearing)*OBX_TRK_BEARINGCOURSE_LSB*DEG_TO_RAD;
+    //
+    lTrackPt.setX(width()/2  + static_cast<int>(lTrackRangePx * sin(lTrackBreaingRad)));
+    lTrackPt.setY(height()/2 - static_cast<int>(lTrackRangePx * cos(lTrackBreaingRad)));
 
     // Speed Vector
-    lVectorPt.setX(lTrackPt.x()+lPlotTrack.Track.GroundSpeedKts*sin(lPlotTrack.Track.CourseDeg*DEG_TO_RAD));
-    lVectorPt.setY(lTrackPt.y()-lPlotTrack.Track.GroundSpeedKts*cos(lPlotTrack.Track.CourseDeg*DEG_TO_RAD));
+    double lTrackSpeedKts = static_cast<double>(lPlotTrack.Track.GroundSpeed)*OBX_TRK_SPEED_LSB;
+    double lTrackSpeedPx   = mDisplayPxKtsRatio*lTrackSpeedKts;
+    //
+    double lTrackCourseDeg = static_cast<double>(lPlotTrack.Track.Course)*OBX_TRK_BEARINGCOURSE_LSB;
+    double lTrackCourseRad = lTrackCourseDeg*DEG_TO_RAD;
+    //
+    lVectorPt.setX(lTrackPt.x() + static_cast<int>(lTrackSpeedPx*sin(lTrackCourseRad)));
+    lVectorPt.setY(lTrackPt.y() - static_cast<int>(lTrackSpeedPx*cos(lTrackCourseRad)));
 
     // Paint
     pPainter->drawRect(lTrackPt.x()-4, lTrackPt.y()-4, 8,8);
     pPainter->drawLine(lTrackPt, lVectorPt);
-    pPainter->drawText(lTrackPt.x()+6, lTrackPt.y()+6,QString(lPlotTrack.Track.CallSing));
+    pPainter->drawText(lTrackPt.x()+10, lTrackPt.y()+10,QString("%1°/%2kts").arg(static_cast<int>(lTrackCourseDeg),3,10,QChar('0'))
+                       .arg(static_cast<int>(lTrackSpeedKts),3,10,QChar('0')));
+    pPainter->drawText(lTrackPt.x()+10, lTrackPt.y()+25,QString("%1").arg(lPlotTrack.Track.CallSing));
   }
 }
 
@@ -266,40 +356,70 @@ void ObelixPlotWidget::PaintControl()
   {
     mScopeVideoImg->fill(0xFF000000);
   }
+
+
   
-  QPainter lScopePainter(mScopeVideoImg);
+  QPainter lScopeVideoPainter(mScopeVideoImg);
+  QPainter lScopeTrackPainter(mScopeTrackImg);
+
   QPainter lWidgetPainter(mWidgetImg);
   
   
   // Cell table
-  PaintVideoCells(&lScopePainter);
+  if (mDisplayVideo == true)
+  {
+    // Painte
+    PaintVideoCells(&lScopeVideoPainter);
+
+    // Enable persistance
+    if (true == mIsPersistEnabled)
+    {
+      mPersistImg->AppendImage(*mScopeVideoImg);
+      lWidgetPainter.drawImage(mXCtr-mPersistImg->width()/2, mYCtr-mPersistImg->height()/2, *mPersistImg);
+    }
+    else
+    {
+      lWidgetPainter.drawImage(mXCtr-mScopeVideoImg->width()/2, mYCtr-mScopeVideoImg->height()/2, *mScopeVideoImg);
+    }
+  }
+  
+  // Paint tracks
+  if (mDisplayTracks == true)
+  {
+    qint64 lCurrentUpdate = QDateTime::currentMSecsSinceEpoch();
+
+    // Update track image
+    /// \todo Set via paramerter
+    if ((lCurrentUpdate - mLastTrackPlotUpdate) > 200)
+    {
+      mScopeTrackImg->fill(0x00000000);
+      PaintTrackPlots(&lScopeTrackPainter);
+      mLastTrackPlotUpdate = lCurrentUpdate;
+    }
+
+    lWidgetPainter.drawImage(0, 0, *mScopeTrackImg);
+  }
 
 
-  
-  //
-  
-  if (true == mIsPersistEnabled)
-  {
-    // Persistance on full scope
-    mPersistImg->AppendImage(*mScopeVideoImg);
-    lWidgetPainter.drawImage(mXCtr-mPersistImg->width()/2, mYCtr-mPersistImg->height()/2, *mPersistImg);
-  }
-  else
-  {
-    lWidgetPainter.drawImage(mXCtr-mScopeVideoImg->width()/2, mYCtr-mScopeVideoImg->height()/2, *mScopeVideoImg);
-  }
-  
+
+
   
   lWidgetPainter.setPen(Qt::green);
   
-  //lWidgetPainter.drawText(10,10,QString("%1").arg(mFpsAverageTimeMs));
-  lWidgetPainter.drawEllipse(mXCtr-mPlotRad, mYCtr-mPlotRad, 2*mPlotRad, 2*mPlotRad);
-  
-  
-  lWidgetPainter.drawLine(mXCtr, mYCtr, mXCtr+mPlotRad*sin(mLastAzimuthDeg*DEG_TO_RAD), mYCtr-mPlotRad*cos(mLastAzimuthDeg*DEG_TO_RAD));
-  
 
-  PaintTrackPlots(&lWidgetPainter);
+  // Range limit
+  if (mDisplayRangeLimit == true)
+  {
+    lWidgetPainter.drawEllipse(mXCtr-mPlotRad, mYCtr-mPlotRad, 2*mPlotRad, 2*mPlotRad);
+  }
+  
+  // Antenna
+  if (mDisplayAntenna == true)
+  {
+    lWidgetPainter.drawLine(mXCtr, mYCtr, mXCtr+mPlotRad*sin(mLastAzimuthDeg*DEG_TO_RAD), mYCtr-mPlotRad*cos(mLastAzimuthDeg*DEG_TO_RAD));
+  }
+
+
   
   //
   mLbxWidget->setPixmap(QPixmap::fromImage(*mWidgetImg));

@@ -58,6 +58,27 @@ public:
   inline uint   FifoObelixTrackLoad() const {return mFifoObelixTrackLoad;}
   inline T_FifoHandler   FifoObelixTrack() {return mFifoObelixTrack;}
 
+
+  //
+  inline double DisplayPxKtsRatio() const  {return mDisplayPxKtsRatio;}
+  inline void SetDisplayPxKtsRatio(double pDisplayPxKtsRatio) {mDisplayPxKtsRatio=pDisplayPxKtsRatio;}
+
+
+
+  inline bool DisplayAntenna   () const {return mDisplayAntenna;}
+  inline bool DisplayRangeLimit() const {return mDisplayRangeLimit;}
+  inline bool DisplayRangeRings() const {return mDisplayRangeRings;}
+  inline bool DisplayCompas    () const {return mDisplayCompas;}
+  inline bool DisplayVideo     () const {return mDisplayVideo;}
+  inline bool DisplayTracks    () const {return mDisplayTracks;}
+  inline void SetDisplayAntenna   (bool pEnable) {mDisplayAntenna = pEnable;}
+  inline void SetDisplayRangeLimit(bool pEnable) {mDisplayRangeLimit = pEnable;}
+  inline void SetDisplayRangeRings(bool pEnable) {mDisplayRangeRings = pEnable;}
+  inline void SetDisplayCompas    (bool pEnable) {mDisplayCompas = pEnable;}
+  inline void SetDisplayVideo     (bool pEnable) {mDisplayVideo = pEnable;}
+  inline void SetDisplayTracks    (bool pEnable) {mDisplayTracks = pEnable;}
+
+
 protected:
   void resizeEvent(QResizeEvent* event) override;
 
@@ -71,6 +92,7 @@ private:
 private:
 
   QImage* mScopeVideoImg;
+  QImage* mScopeTrackImg;
   QImage* mWidgetImg;
   GreenPresistImage* mPersistImg;
 
@@ -97,6 +119,11 @@ private:
       //
       double mLastAzimuthDeg;
 
+
+
+
+      double mDisplayPxKtsRatio;
+
   //
 
       QElapsedTimer mElapsedTimer;
@@ -116,6 +143,17 @@ private:
   //
   QHash<uint16_t, T_PlotTrack> mTrackTable;
   qint64                       mLastTrackPlotUpdate;
+
+
+
+  bool mDisplayAntenna;
+  bool mDisplayRangeLimit;
+  bool mDisplayRangeRings;
+  bool mDisplayCompas;
+  bool mDisplayVideo;
+  bool mDisplayTracks;
+
+
 };
 
 #endif // OBELIXPLOTWIDGET_H

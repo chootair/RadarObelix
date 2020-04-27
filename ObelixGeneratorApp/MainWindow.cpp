@@ -59,6 +59,8 @@ MainWindow::MainWindow(QWidget *parent) :
   {
     mTrackTable[i].Azimuht = rand()%360;
     mTrackTable[i].Range   = rand()%100;
+    mTrackTable[i].Course  = rand()%360;
+    mTrackTable[i].Speed   = rand()%100;
   }
 
 }
@@ -95,7 +97,7 @@ void MainWindow::GenerateBeam()
     mBeam[lIdxBeam].StartRgNm = 0.1;
     mBeam[lIdxBeam].CellWidthNm   = (1-mBeam[lIdxBeam].StartRgNm)/mNbCells;
     mBeam[lIdxBeam].CellCount   = mNbCells/mNbLevel;
-    mBeam[lIdxBeam].CellCount   = qMin(mBeam[lIdxBeam].CellCount, OBELIX_CELL_COUNT);
+    mBeam[lIdxBeam].CellCount   = qMin(mBeam[lIdxBeam].CellCount, OBX_CELL_TBL_CNT);
   }
 
 
@@ -138,34 +140,107 @@ void MainWindow::OnTimerTick()
   }
 
 
+
+  // Track report
    T_ObelixTrackReportMessage lTrackReport;
 
    lTrackReport.Number=0;
-   lTrackReport.TrackCount=qMin((int)OBELIX_TRACK_TABLE_COUNT, mTrackTableSize);
+
+   int lTrackTblIdx = 0;
+   int lRemainTrack = mTrackTableSize - lTrackTblIdx;
+
+
+   while (lRemainTrack > 0)
+   {
+
+   lTrackReport.TrackCount=qMin((int)OBX_TRK_TBL_CNT, lRemainTrack);
 
   // Track table
   for (int i=0; i<lTrackReport.TrackCount;  i++)
   {
-   lTrackReport.TrackTbl[i].Id=i;
+   lTrackReport.TrackTbl[i].Id=lTrackTblIdx;
    lTrackReport.TrackTbl[i].Status=1;
-   lTrackReport.TrackTbl[i].Spare=0;
-   lTrackReport.TrackTbl[i].LatitudeDeg=0;
-   lTrackReport.TrackTbl[i].LongitudeDeg=0;
-   lTrackReport.TrackTbl[i].BearingDeg = mTrackTable[i].Azimuht;
-   lTrackReport.TrackTbl[i].DistanceNm = mTrackTable[i].Range;
-   lTrackReport.TrackTbl[i].CourseDeg=rand()%360;
-   lTrackReport.TrackTbl[i].GroundSpeedKts=rand()%50;
-   lTrackReport.TrackTbl[i].FlightLevel=0;
+   lTrackReport.TrackTbl[i].Quality=0;
+   //
+   lTrackReport.TrackTbl[i].Latitude=0;
+   lTrackReport.TrackTbl[i].Longitude=0;
+   lTrackReport.TrackTbl[i].Altitude=0;
+   //
+   lTrackReport.TrackTbl[i].Bearing = static_cast<quint16>(mTrackTable[lTrackTblIdx].Azimuht/OBX_TRK_BEARINGCOURSE_LSB);
+   lTrackReport.TrackTbl[i].Distance =  static_cast<quint16>(mTrackTable[lTrackTblIdx].Range/OBX_TRK_DISTANCE_LSB);
+   //
+   lTrackReport.TrackTbl[i].Course= static_cast<quint16>(mTrackTable[lTrackTblIdx].Course/OBX_TRK_BEARINGCOURSE_LSB);
+   lTrackReport.TrackTbl[i].GroundSpeed= static_cast<quint16>(mTrackTable[lTrackTblIdx].Speed/OBX_TRK_SPEED_LSB);
+   //
+   lTrackReport.TrackTbl[i].Mode1Code = 0;
+   lTrackReport.TrackTbl[i].Mode2Code = 0;
+   lTrackReport.TrackTbl[i].Mode3ACode = 0;
+   lTrackReport.TrackTbl[i].ModeCCode = 0;
+   lTrackReport.TrackTbl[i].ModeSCode = 0;
+   lTrackReport.TrackTbl[i].AircraftId = 0;
+   memset(lTrackReport.TrackTbl[i].CallSing, 0, 8);
    sprintf(lTrackReport.TrackTbl[i].CallSing, "TRK %02i",i);
-
   }
 
+
   lWriteSize = mUdpSocket->writeDatagram((char*)&(lTrackReport),sizeof(T_ObelixTrackReportMessage),QHostAddress("192.12.12.12"),5148);
+
+
+  lTrackTblIdx++;
+  lRemainTrack = mTrackTableSize - lTrackTblIdx;
+   }
 
 
   // Update info
   ui->tbxMsgSent->setText(QString("%1").arg(lMsgSent));
   ui->tbxMsgErr->setText(QString("%1").arg(lMsgErr));
+
+
+
+  // Move tracks
+  for (int i=0; i<mTrackTableSize;  i++)
+  {
+    mTrackTable[i].Azimuht = (mTrackTable[i].Azimuht+0.001*(100-rand()%200));
+    if (mTrackTable[i].Azimuht >= 360)
+    {
+      mTrackTable[i].Azimuht = 360 - mTrackTable[i].Azimuht;
+    }
+    if (mTrackTable[i].Azimuht < 0)
+    {
+      mTrackTable[i].Azimuht = 360 + mTrackTable[i].Azimuht;
+    }
+    //
+    mTrackTable[i].Range   = (mTrackTable[i].Range+0.0001*(100-rand()%200));
+    if (mTrackTable[i].Range >= 100)
+    {
+      mTrackTable[i].Range = 50;
+    }
+    if (mTrackTable[i].Range < 0)
+    {
+      mTrackTable[i].Range = 50;
+    }
+    //
+    mTrackTable[i].Course = (mTrackTable[i].Course+0.001*(100-rand()%200));
+    if (mTrackTable[i].Course >= 360)
+    {
+      mTrackTable[i].Course = 360 - mTrackTable[i].Course;
+    }
+    if (mTrackTable[i].Course < 0)
+    {
+      mTrackTable[i].Course = 360 + mTrackTable[i].Course;
+    }
+    //
+    mTrackTable[i].Speed   = (mTrackTable[i].Speed+0.1*(100-rand()%200));
+    if (mTrackTable[i].Speed >= 100)
+    {
+      mTrackTable[i].Speed = 20;
+    }
+    if (mTrackTable[i].Speed < 0)
+    {
+      mTrackTable[i].Speed = 20;
+    }
+  }
+
 }
 
 void MainWindow::BuildBeam(double pStartAzimutDeg,
@@ -201,6 +276,9 @@ void MainWindow::BuildBeam(double pStartAzimutDeg,
       mBeam[lIdxBeam].CellWidthNm = lSubBeamRgWidthNm;
       mBeam[lIdxBeam].StartRgNm   = pStartRangeNm + lIdxLvl * mBeam[lIdxBeam].CellWidthNm * mBeam[lIdxBeam].CellCount;
 
+
+      mBeam[lIdxBeam].VideoMode = pRadarMode;
+
       // Sub-Beam cells value
       for (int lIdxCell=0; lIdxCell<mBeam[lIdxLvl].CellCount; lIdxCell++)
       {
@@ -210,9 +288,12 @@ void MainWindow::BuildBeam(double pStartAzimutDeg,
         // Cell range ratio
         double lCellRgRto = (mBeam[lIdxBeam].StartRgNm+(lIdxCell+0.5)*mBeam[lIdxBeam].CellWidthNm-pStartRangeNm)/pRangeWidthNm;
 
-        // Track mode
-        if (pRadarMode == 1)
+        // Search
+        if (pRadarMode == OBX_VIDEO_SEARCH)
         {
+          // Noise level
+          mBeam[lIdxBeam].CellValueTbl[lIdxCell] = rand()%50;
+
           // Loop on track table
           for (int lIdxTrack=0; lIdxTrack<mTrackTableSize;  lIdxTrack++)
           {
@@ -237,12 +318,13 @@ void MainWindow::BuildBeam(double pStartAzimutDeg,
           }
         }
         // Meteo mode
-        else if (pRadarMode == 2)
+        else if (pRadarMode == OBX_VIDEO_WEATHER)
         {
-          /// \todo Meteo mode
+          /// \todo
+          mBeam[lIdxBeam].CellValueTbl[lIdxCell]=rand()%128;
         }
         // Random mode
-        else if (pRadarMode == 3)
+        else if (pRadarMode == OBX_VIDEO_TEST)
         {
           mBeam[lIdxBeam].CellValueTbl[lIdxCell]=rand()%255;
         }

@@ -34,7 +34,6 @@ void GreenPresistImage::AppendImage(QImage &pImage)
   int s5 = 5*s1;
   int s6 = 6*s1;
   int s7 = 7*s1;
-  int s8 = 8*s1;
 
   QFuture<void> f1 = QtConcurrent::run(CalcPresistence, 0 , s1           , this, pImage, mPersistenceRatio);
   QFuture<void> f2 = QtConcurrent::run(CalcPresistence, s1, s2           , this, pImage, mPersistenceRatio);

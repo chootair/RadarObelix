@@ -1,6 +1,6 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2020-04-13T15:39:18
+# Project created by QtCreator 2020-04-24T11:54:04
 #
 #-------------------------------------------------
 
@@ -8,7 +8,7 @@ QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = ObelixPlot
+TARGET = ObelixTestApp
 TEMPLATE = app
 
 # The following define makes your compiler emit warnings if you use
@@ -24,22 +24,28 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 CONFIG += c++11
 
-INCLUDEPATH += ../
+INCLUDEPATH += ../ObelixPlotApp \
+               ../ObelixGeneratorApp \
+               ../
 
 SOURCES += \
-        GreenPresistImage.cpp \
-        ObelixPlotWidget.cpp \
-        ObelixUdpPlotWidget.cpp \
-        ObelixUdpReader.cpp \
+        ../ObelixGeneratorApp/ObelixUdpSim.cpp \
+        ../ObelixPlotApp/GreenPresistImage.cpp \
+        ../ObelixPlotApp/ObelixPlotWidget.cpp \
+        ../ObelixPlotApp/ObelixUdpPlotWidget.cpp \
+        ../ObelixPlotApp/ObelixUdpReader.cpp \
+        ObelixUdpSimThread.cpp \
         main.cpp \
         MainWindow.cpp
 
 HEADERS += \
-        GreenPresistImage.h \
+        ../ObelixGeneratorApp/ObelixUdpSim.h \
+        ../ObelixPlotApp/GreenPresistImage.h \
+        ../ObelixPlotApp/ObelixPlotWidget.h \
+        ../ObelixPlotApp/ObelixUdpPlotWidget.h \
+        ../ObelixPlotApp/ObelixUdpReader.h \
         MainWindow.h \
-        ObelixPlotWidget.h \
-        ObelixUdpPlotWidget.h \
-        ObelixUdpReader.h
+        ObelixUdpSimThread.h
 
 FORMS += \
         MainWindow.ui
