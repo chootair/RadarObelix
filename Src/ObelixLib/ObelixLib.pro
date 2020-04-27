@@ -21,7 +21,7 @@ SOURCES +=  \
   PresistImage.cpp \
   ObelixPlotWidget.cpp \
   ObelixUdpPlotWidget.cpp \
-  ObelixUdpReader.cpp \
+  ObelixUdpReaderThread.cpp \
   ObelixUdpSim.cpp \
   ObelixUdpSimThread.cpp
 
@@ -32,6 +32,6 @@ HEADERS +=  \
   Obelix.h \
   ObelixPlotWidget.h \
   ObelixUdpPlotWidget.h \
-  ObelixUdpReader.h \
+  ObelixUdpReaderThread.h \
   ObelixUdpSim.h \
   ObelixUdpSimThread.h

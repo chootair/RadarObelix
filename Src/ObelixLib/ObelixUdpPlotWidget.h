@@ -4,7 +4,7 @@
 #include <QTimer>
 
 #include "ObelixPlotWidget.h"
-#include "ObelixUdpReader.h"
+#include "ObelixUdpReaderThread.h"
 
 class ObelixUdpPlotWidget : public ObelixPlotWidget
 {
@@ -24,8 +24,8 @@ private slots:
 private:
   QTimer* mTimer;
   //
-  ObelixUdpReader* mObelixUdpReaderVideo;
-  ObelixUdpReader* mObelixUdpReaderTrack;
+  ObelixUdpReaderThread* mObelixUdpReaderVideo;
+  ObelixUdpReaderThread* mObelixUdpReaderTrack;
 };
 
 #endif // OBELIXUDPPLOTWIDGET_H

@@ -1,5 +1,5 @@
-#ifndef OBELIXUDPREADER_H
-#define OBELIXUDPREADER_H
+#ifndef OBELIXUDPREADERTHREAD_H
+#define OBELIXUDPREADERTHREAD_H
 
 // Qt
 #include <QThread>
@@ -9,13 +9,13 @@
 //
 #include "Obelix.h"
 
-class ObelixUdpReader : public QThread
+class ObelixUdpReaderThread : public QThread
 {
   Q_OBJECT
 
 public:
-  ObelixUdpReader(QObject *parent = nullptr);
-  ~ObelixUdpReader();
+  ObelixUdpReaderThread(QObject *parent = nullptr);
+  ~ObelixUdpReaderThread();
   void SetConnexionParameters(QString pIp, uint pPort);
   void SetFifoParameter(char*           pMessageFifo,
                         uint*           pFifoIndex,
@@ -41,4 +41,4 @@ uint mPort;
   QReadWriteLock* mRwlocker;
 };
 
-#endif // OBELIXUDPREADER_H
+#endif // OBELIXUDPREADERTHREAD_H

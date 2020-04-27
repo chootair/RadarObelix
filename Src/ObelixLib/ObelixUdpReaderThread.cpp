@@ -1,6 +1,6 @@
-#include "ObelixUdpReader.h"
+#include "ObelixUdpReaderThread.h"
 
-ObelixUdpReader::ObelixUdpReader(QObject *parent) :
+ObelixUdpReaderThread::ObelixUdpReaderThread(QObject *parent) :
   QThread(parent)
 {
   mRun      = false;
@@ -10,17 +10,17 @@ ObelixUdpReader::ObelixUdpReader(QObject *parent) :
   mPort = 0;
 }
 
-ObelixUdpReader::~ObelixUdpReader()
+ObelixUdpReaderThread::~ObelixUdpReaderThread()
 {
 }
 
-void ObelixUdpReader::SetConnexionParameters(QString pIp, uint pPort)
+void ObelixUdpReaderThread::SetConnexionParameters(QString pIp, uint pPort)
 {
   mIp = pIp;
   mPort = pPort;
 }
 
-void ObelixUdpReader::SetFifoParameter(char *pMessageFifo,
+void ObelixUdpReaderThread::SetFifoParameter(char *pMessageFifo,
                                        uint *pFifoIndex,
                                        uint pFifoSize,
                                        uint pMessageSize,
@@ -37,12 +37,12 @@ void ObelixUdpReader::SetFifoParameter(char *pMessageFifo,
 
 
 
-void ObelixUdpReader::AskForStop()
+void ObelixUdpReaderThread::AskForStop()
 {
   mRun = false;
 }
 
-void ObelixUdpReader::run()
+void ObelixUdpReaderThread::run()
 {
   qint64 lReadLoopCnt = 0;
   qint64 lReadSize = 0;

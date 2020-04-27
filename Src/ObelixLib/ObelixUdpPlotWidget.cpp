@@ -2,7 +2,7 @@
 
 ObelixUdpPlotWidget::ObelixUdpPlotWidget(QWidget *parent) : ObelixPlotWidget(parent)
 {
-  mObelixUdpReaderVideo = new ObelixUdpReader();
+  mObelixUdpReaderVideo = new ObelixUdpReaderThread();
   mObelixUdpReaderVideo->SetFifoParameter(this->FifoObelixVideo().mFifoPtr,
                                           this->FifoObelixVideo().mFifoIndexPtr,
                                           this->FifoObelixVideo().mFifoSize,
@@ -12,7 +12,7 @@ ObelixUdpPlotWidget::ObelixUdpPlotWidget(QWidget *parent) : ObelixPlotWidget(par
 
 
 
-  mObelixUdpReaderTrack = new ObelixUdpReader();
+  mObelixUdpReaderTrack = new ObelixUdpReaderThread();
   mObelixUdpReaderTrack->SetFifoParameter(this->FifoObelixTrack().mFifoPtr,
                                           this->FifoObelixTrack().mFifoIndexPtr,
                                           this->FifoObelixTrack().mFifoSize,
