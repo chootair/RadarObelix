@@ -1,7 +1,4 @@
 TEMPLATE = subdirs
 
-SUBDIRS +=  ObelixLib\
-            ObelixGeneratorApp \
-            Obelix1090App \
-            ObelixPlotApp \
-            ObelixTestApp
+SUBDIRS +=  Src/ObelixLib     \
+            Src/ObelixTestApp
