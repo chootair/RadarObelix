@@ -41,16 +41,19 @@ ObelixPlotWidget::ObelixPlotWidget(QWidget *parent) : QOpenGLWidget(parent)
   
   mScopeVideoImg = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
   mScopeTrackImg = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
+  mToolsImg      = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
   mWidgetImg     = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
+
   
   mPersistImg = new GreenPresistImage(800,800);
   mPersistImg->SetPersistence(0);
-  mIsPersistEnabled = false;
+  mPersistRatio = -1;
+    mPersistMultiplyColor.setRgb(0,0,0);
   
   mLbxWidget = new QLabel("SCOPE RADAR", this);
   mLbxWidget->lower();
   
-  mSideMargin = 3;
+  mSideMargin = 20;
   mHrzRatio = 0.99;
   mRefSize=0;
   mPlotRad=0;
@@ -77,6 +80,18 @@ ObelixPlotWidget::ObelixPlotWidget(QWidget *parent) : QOpenGLWidget(parent)
   mDisplayCompas = true;
   mDisplayVideo = true;
   mDisplayTracks = true;
+
+  mColorAntenna    = Qt::green;
+  mColorRangeLimit = Qt::green;
+  mColorRangeRings = Qt::green;
+  mColorCompas     = Qt::green;
+  mColorVideo      = Qt::green;
+  mColorTracks     = Qt::white;
+
+
+  mNeedToPaintInfo = true;
+
+
 }
 
 ObelixPlotWidget::~ObelixPlotWidget()
@@ -119,6 +134,11 @@ void ObelixPlotWidget::ClearScope()
   mWidgetImg->fill(0xFF000000);
   mScopeVideoImg->fill(0xFF000000);
   mScopeTrackImg->fill(0x00000000);
+  mToolsImg->fill(0x00000000);
+  mPersistImg->fill(0xFF000000);
+
+  //
+  mNeedToPaintInfo=true;
 
   //
   RefreshScope();
@@ -126,15 +146,9 @@ void ObelixPlotWidget::ClearScope()
 
 void ObelixPlotWidget::SetPresistenceRatio(double pRatio)
 {
-  mPersistImg->SetPersistence(pRatio);
-  if (pRatio <= 0)
-  {
-    mIsPersistEnabled = false;
-  }
-  else
-  {
-    mIsPersistEnabled = true;
-  }
+  //mPersistImg->SetPersistence(pRatio);
+  mPersistRatio = pRatio;
+  mPersistMultiplyColor.setRgb(240*pRatio,240*pRatio,240*pRatio);
 }
 
 void ObelixPlotWidget::resizeEvent(QResizeEvent *event)
@@ -166,6 +180,9 @@ void ObelixPlotWidget::SetMyGeometry()
   delete mScopeVideoImg;
   mScopeVideoImg = new QImage(2*mPlotRad, 2*mPlotRad, QImage::Format_ARGB32_Premultiplied);
   //
+  delete mToolsImg;
+  mToolsImg = new QImage(width(), height(), QImage::Format_ARGB32_Premultiplied);
+  //
   delete mScopeTrackImg;
   mScopeTrackImg = new QImage(width(), height(), QImage::Format_ARGB32_Premultiplied);
 
@@ -173,6 +190,10 @@ void ObelixPlotWidget::SetMyGeometry()
   mWidgetImg->fill(0xFF000000);
   mScopeVideoImg->fill(0xFF000000);
   mScopeTrackImg->fill(0x00000000);
+  mToolsImg->fill(0x00000000);
+
+  //
+  mNeedToPaintInfo=true;
 }
 
 void ObelixPlotWidget::PaintVideoCells(QPainter *pPainter)
@@ -220,7 +241,14 @@ void ObelixPlotWidget::PaintVideoCells(QPainter *pPainter)
       // Fill cell according radar mode
       if (mFifoVideoPtr[i].VideoMode == OBX_VIDEO_SEARCH)
       {
-        lBrush.setColor(QColor(0,mFifoVideoPtr[i].CellValueTbl[lIdxCell-1],0));
+        double lFactor = mFifoVideoPtr[i].CellValueTbl[lIdxCell-1]/255.0;
+
+
+        lBrush.setColor(QColor(lFactor*mColorVideo.red(),
+                               lFactor*mColorVideo.green(),
+                               lFactor*mColorVideo.blue()));
+
+        //lBrush.setColor(QColor(0,mFifoVideoPtr[i].CellValueTbl[lIdxCell-1],0));
       }
       else if (mFifoVideoPtr[i].VideoMode == OBX_VIDEO_WEATHER)
       {
@@ -301,7 +329,7 @@ void ObelixPlotWidget::PaintVideoCells(QPainter *pPainter)
 
 void ObelixPlotWidget::PaintTrackPlots(QPainter *pPainter)
 {
-  pPainter->setPen(Qt::red);
+  pPainter->setPen(mColorTracks);
   pPainter->setBrush(Qt::NoBrush);
 
 
@@ -339,42 +367,141 @@ void ObelixPlotWidget::PaintTrackPlots(QPainter *pPainter)
     lVectorPt.setY(lTrackPt.y() - static_cast<int>(lTrackSpeedPx*cos(lTrackCourseRad)));
 
     // Paint
-    pPainter->drawRect(lTrackPt.x()-4, lTrackPt.y()-4, 8,8);
+    pPainter->drawRect(lTrackPt.x()-3, lTrackPt.y()-3, 6,6);
     pPainter->drawLine(lTrackPt, lVectorPt);
-    pPainter->drawText(lTrackPt.x()+10, lTrackPt.y()+10,QString("%1°/%2kts").arg(static_cast<int>(lTrackCourseDeg),3,10,QChar('0'))
+    pPainter->drawText(lTrackPt.x()+10, lTrackPt.y()+7,QString("[%1]").arg(lPlotTrack.Track.Id));
+    pPainter->drawText(lTrackPt.x()+10, lTrackPt.y()+22,QString("%1°/%2kts").arg(static_cast<int>(lTrackCourseDeg),3,10,QChar('0'))
                        .arg(static_cast<int>(lTrackSpeedKts),3,10,QChar('0')));
-    pPainter->drawText(lTrackPt.x()+10, lTrackPt.y()+25,QString("%1").arg(lPlotTrack.Track.CallSing));
+    pPainter->drawText(lTrackPt.x()+10, lTrackPt.y()+37,QString("%1").arg(lPlotTrack.Track.CallSing));
+  }
+}
+
+void ObelixPlotWidget::PaintTools(QPainter *pPainter)
+{
+  // Translate painter
+  pPainter->translate(mXCtr,mYCtr);
+
+  // Range limit
+  if (mDisplayRangeLimit == true)
+  {
+    pPainter->setPen(mColorRangeLimit);
+    pPainter->drawEllipse(-mPlotRad, -mPlotRad, 2*mPlotRad, 2*mPlotRad);
+  }
+
+  // Range rings
+  if (mDisplayRangeRings == true)
+  {
+    pPainter->setPen(mColorRangeRings);
+
+    // Ring space auto
+    int lRangeRingSpace = static_cast<int>(10*floor(mRangeNm/30.0));
+
+    // Loop on range rings
+    for (int lRangeRingDst=lRangeRingSpace; lRangeRingDst<mRangeNm; lRangeRingDst += lRangeRingSpace)
+    {
+      int lRangeScale = mPlotRad/mRangeNm*lRangeRingDst;
+      pPainter->drawEllipse(-lRangeScale, -lRangeScale, 2*lRangeScale, 2*lRangeScale);
+    }
+  }
+
+
+  // Compas
+  if (mDisplayCompas == true)
+  {
+    pPainter->setPen(mColorCompas);
+
+    //
+    int lMarkWidth  = 0;
+    int lMarkLength = 0;
+
+    //
+    for (int iDeg = 0; iDeg < 360; iDeg+=5)
+    {
+      // Major
+      if (iDeg%90 == 0)
+      {
+        lMarkWidth = 5;
+        lMarkLength = 10;
+      }
+      // Medium
+      else if (iDeg%45 == 0)
+      {
+        lMarkWidth = 3;
+        lMarkLength=5;
+      }
+      // Small
+      else if (iDeg%10 == 0)
+      {
+        lMarkWidth = 1;
+        lMarkLength=3;
+      }
+      else
+      {
+        continue;
+      }
+
+      // Mark
+      pPainter->setPen(QPen(mColorCompas,lMarkWidth));
+      pPainter->drawLine((mPlotRad            ) * sin(iDeg*DEG_TO_RAD), -(mPlotRad            ) * cos(iDeg*DEG_TO_RAD),
+                         (mPlotRad+lMarkLength) * sin(iDeg*DEG_TO_RAD), -(mPlotRad+lMarkLength) * cos(iDeg*DEG_TO_RAD));
+
+
+      // Text
+      if (iDeg%10 == 0)
+      {
+        QSize        sz_l;
+        QFontMetrics ft_metrics_l (this->font());
+        QString lText = QString("%1").arg(iDeg,3,10,QChar('0'));
+        sz_l = ft_metrics_l.size(Qt::TextSingleLine, lText);
+        int lTextRad = 30;
+
+        pPainter->drawText( (mPlotRad+lTextRad) * sin(iDeg*DEG_TO_RAD)  - 0.5*sz_l.width(),
+                            -(mPlotRad+lTextRad) * cos(iDeg*DEG_TO_RAD) + 0.5*sz_l.height(),lText);// ,Qt::AlignVCenter,sz_l.width(),sz_l.height(),lText);
+      }
+
+
+    }
   }
 }
 
 
 void ObelixPlotWidget::PaintControl()
 {
+  QPainter lScopeVideoPainter(mScopeVideoImg);
+  QPainter lWidgetPainter(mWidgetImg);
+
   // Reset
   mWidgetImg->fill(0xFF000000);
-  if (true == mIsPersistEnabled)
+
+  if (mPersistRatio >= 0)
   {
     mScopeVideoImg->fill(0xFF000000);
   }
 
 
-  
-  QPainter lScopeVideoPainter(mScopeVideoImg);
-  QPainter lScopeTrackPainter(mScopeTrackImg);
-
-  QPainter lWidgetPainter(mWidgetImg);
-  
-  
   // Cell table
   if (mDisplayVideo == true)
   {
-    // Painte
+    // Painter
     PaintVideoCells(&lScopeVideoPainter);
 
     // Enable persistance
-    if (true == mIsPersistEnabled)
+    if (mPersistRatio > 0)
     {
-      mPersistImg->AppendImage(*mScopeVideoImg);
+      QPainter lPersistPainter(mPersistImg);
+
+      // Light the previous image
+      if (mPersistRatio<1)
+      {
+        lPersistPainter.setCompositionMode( QPainter::CompositionMode_Multiply);
+        lPersistPainter.fillRect(0,0,mPersistImg->width(), mPersistImg->height(),QBrush(mPersistMultiplyColor));
+      }
+
+      // Add the new
+      lPersistPainter.setCompositionMode( QPainter::CompositionMode_Plus);
+      lPersistPainter.drawImage(0,0, *mScopeVideoImg);
+
+      // Paint into the widget image
       lWidgetPainter.drawImage(mXCtr-mPersistImg->width()/2, mYCtr-mPersistImg->height()/2, *mPersistImg);
     }
     else
@@ -382,10 +509,11 @@ void ObelixPlotWidget::PaintControl()
       lWidgetPainter.drawImage(mXCtr-mScopeVideoImg->width()/2, mYCtr-mScopeVideoImg->height()/2, *mScopeVideoImg);
     }
   }
-  
+
   // Paint tracks
   if (mDisplayTracks == true)
   {
+    QPainter lScopeTrackPainter(mScopeTrackImg);
     qint64 lCurrentUpdate = QDateTime::currentMSecsSinceEpoch();
 
     // Update track image
@@ -400,27 +528,24 @@ void ObelixPlotWidget::PaintControl()
     lWidgetPainter.drawImage(0, 0, *mScopeTrackImg);
   }
 
-
-
-
-  
-  lWidgetPainter.setPen(Qt::green);
-  
-
-  // Range limit
-  if (mDisplayRangeLimit == true)
+  // Info
+  if (mNeedToPaintInfo == true)
   {
-    lWidgetPainter.drawEllipse(mXCtr-mPlotRad, mYCtr-mPlotRad, 2*mPlotRad, 2*mPlotRad);
+    QPainter lToolsPainter(mToolsImg);
+    mToolsImg->fill(0x00000000);
+    PaintTools(&lToolsPainter);
+    mNeedToPaintInfo = false;
   }
-  
+  lWidgetPainter.drawImage(0, 0, *mToolsImg);
+
+
   // Antenna
   if (mDisplayAntenna == true)
   {
+    lWidgetPainter.setPen(mColorAntenna);
     lWidgetPainter.drawLine(mXCtr, mYCtr, mXCtr+mPlotRad*sin(mLastAzimuthDeg*DEG_TO_RAD), mYCtr-mPlotRad*cos(mLastAzimuthDeg*DEG_TO_RAD));
   }
 
-
-  
   //
   mLbxWidget->setPixmap(QPixmap::fromImage(*mWidgetImg));
 }

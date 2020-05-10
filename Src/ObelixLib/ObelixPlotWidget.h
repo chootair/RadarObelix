@@ -42,6 +42,7 @@ public:
   void ClearScope();
 
   void SetPresistenceRatio(double pRatio);
+  inline double PresistenceRatio() const { return mPersistRatio;}
 
 
   inline double RangeNm() const {return mRangeNm;}
@@ -72,11 +73,27 @@ public:
   inline bool DisplayVideo     () const {return mDisplayVideo;}
   inline bool DisplayTracks    () const {return mDisplayTracks;}
   inline void SetDisplayAntenna   (bool pEnable) {mDisplayAntenna = pEnable;}
-  inline void SetDisplayRangeLimit(bool pEnable) {mDisplayRangeLimit = pEnable;}
-  inline void SetDisplayRangeRings(bool pEnable) {mDisplayRangeRings = pEnable;}
-  inline void SetDisplayCompas    (bool pEnable) {mDisplayCompas = pEnable;}
+  inline void SetDisplayRangeLimit(bool pEnable) {mDisplayRangeLimit = pEnable; mNeedToPaintInfo=true;}
+  inline void SetDisplayRangeRings(bool pEnable) {mDisplayRangeRings = pEnable; mNeedToPaintInfo=true;}
+  inline void SetDisplayCompas    (bool pEnable) {mDisplayCompas = pEnable; mNeedToPaintInfo=true;}
   inline void SetDisplayVideo     (bool pEnable) {mDisplayVideo = pEnable;}
   inline void SetDisplayTracks    (bool pEnable) {mDisplayTracks = pEnable;}
+
+
+
+  inline QColor ColorAntenna   () const {return mColorAntenna;}
+  inline QColor ColorRangeLimit() const {return mColorRangeLimit;}
+  inline QColor ColorRangeRings() const {return mColorRangeRings;}
+  inline QColor ColorCompas    () const {return mColorCompas;}
+  inline QColor ColorVideo     () const {return mColorVideo;}
+  inline QColor ColorTracks    () const {return mColorTracks;}
+
+  inline void  SetColorAntenna   (QColor pColor) {mColorAntenna    = pColor;}
+  inline void  SetColorRangeLimit(QColor pColor) {mColorRangeLimit = pColor; mNeedToPaintInfo=true;}
+  inline void  SetColorRangeRings(QColor pColor) {mColorRangeRings = pColor; mNeedToPaintInfo=true;}
+  inline void  SetColorCompas    (QColor pColor) {mColorCompas     = pColor; mNeedToPaintInfo=true;}
+  inline void  SetColorVideo     (QColor pColor) {mColorVideo      = pColor;}
+  inline void  SetColorTracks    (QColor pColor) {mColorTracks     = pColor;}
 
 
 protected:
@@ -87,16 +104,20 @@ private:
   void SetMyGeometry();
   void PaintVideoCells(QPainter* pPainter);
   void PaintTrackPlots(QPainter* pPainter);
+  void PaintTools(QPainter* pPainter);
   int ReadTrackPlots();
 
 private:
 
   QImage* mScopeVideoImg;
   QImage* mScopeTrackImg;
+  QImage* mToolsImg;
   QImage* mWidgetImg;
   GreenPresistImage* mPersistImg;
 
-  bool mIsPersistEnabled;
+  //bool mIsPersistEnabled;
+  double mPersistRatio;
+  QColor mPersistMultiplyColor;
 
 
   double mRangeNm;
@@ -152,6 +173,16 @@ private:
   bool mDisplayCompas;
   bool mDisplayVideo;
   bool mDisplayTracks;
+
+  QColor mColorAntenna;
+  QColor mColorRangeLimit;
+  QColor mColorRangeRings;
+  QColor mColorCompas;
+  QColor mColorVideo;
+  QColor mColorTracks;
+
+
+  bool mNeedToPaintInfo;
 
 
 };

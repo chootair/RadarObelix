@@ -18,6 +18,7 @@ TEMPLATE = lib
 # ----------------------------------------------------------
 # SOURCES
 SOURCES +=  \
+  ObelixClient1090Thread.cpp \
   PresistImage.cpp \
   ObelixPlotWidget.cpp \
   ObelixUdpPlotWidget.cpp \
@@ -28,6 +29,7 @@ SOURCES +=  \
 # ----------------------------------------------------------
 # HEADERS
 HEADERS +=  \
+  ObelixClient1090Thread.h \
   PresistImage.h \
   Obelix.h \
   ObelixPlotWidget.h \

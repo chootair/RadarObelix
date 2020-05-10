@@ -31,6 +31,7 @@ public:
 private slots:
     void OnTimerTick();
         void OnSimTimerTick();
+        void OnColorChanged(QColor pColor);
   void on_pbxRunSimulator_clicked();
 
   void on_pbxRunPlot_clicked();

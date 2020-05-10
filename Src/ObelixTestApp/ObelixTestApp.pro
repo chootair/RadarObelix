@@ -18,11 +18,13 @@ TEMPLATE = app
 # ----------------------------------------------------------
 # SOURCES
 SOURCES += main.cpp \
+           ColorPickerButton.cpp \
            MainWindow.cpp
 
 # ----------------------------------------------------------
 # HEADERS
-HEADERS += MainWindow.h
+HEADERS += MainWindow.h \
+  ColorPickerButton.h
 
 # ----------------------------------------------------------
 # FORMS

@@ -31,6 +31,7 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->ckxDispAntenna->setChecked(ui->olxPlot->DisplayAntenna());
   ui->ckxDispRangeLimit->setChecked(ui->olxPlot->DisplayRangeLimit());
   ui->ckxDispRangeRings->setChecked(ui->olxPlot->DisplayRangeRings());
+  ui->sbxPresistance->setValue(ui->olxPlot->PresistenceRatio());
 
   mMainTimer = new QTimer(this);
   connect(mMainTimer,&QTimer::timeout,this,&MainWindow::OnTimerTick);
@@ -44,12 +45,45 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
 
+  ui->pbxColorAntenna   ->SetColor(ui->olxPlot->ColorAntenna());
+  ui->pbxColorRangeLimit->SetColor(ui->olxPlot->ColorRangeLimit());
+  ui->pbxColorRangeRing ->SetColor(ui->olxPlot->ColorRangeRings());
+  ui->pbxColorCompas    ->SetColor(ui->olxPlot->ColorCompas());
+  ui->pbxColorTrack     ->SetColor(ui->olxPlot->ColorTracks());
+  ui->pbxColorVideo     ->SetColor(ui->olxPlot->ColorVideo());
+
+  connect(ui->pbxColorAntenna, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
+  connect(ui->pbxColorRangeLimit, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
+  connect(ui->pbxColorRangeRing, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
+  connect(ui->pbxColorCompas, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
+  connect(ui->pbxColorTrack, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
+  connect(ui->pbxColorVideo, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
+
+
+
+
+
 }
 
 MainWindow::~MainWindow()
 {
   delete ui;
 }
+
+
+void MainWindow::OnColorChanged(QColor pColor)
+{
+  Q_UNUSED(pColor);
+
+  //
+  ui->olxPlot->SetColorAntenna   (ui->pbxColorAntenna   ->Color());
+  ui->olxPlot->SetColorRangeLimit(ui->pbxColorRangeLimit->Color());
+  ui->olxPlot->SetColorRangeRings(ui->pbxColorRangeRing ->Color());
+  ui->olxPlot->SetColorCompas    (ui->pbxColorCompas    ->Color());
+  ui->olxPlot->SetColorTracks    (ui->pbxColorTrack     ->Color());
+  ui->olxPlot->SetColorVideo     (ui->pbxColorVideo     ->Color());
+}
+
 
 void MainWindow::on_pbxRunSimulator_clicked()
 {
@@ -338,6 +372,8 @@ void MainWindow::PushSimTrackTable()
     mlTrackTable[i].Distance   = static_cast<quint16>(mSimTable[i].Distance/OBX_TRK_DISTANCE_LSB);
     mlTrackTable[i].Course  = static_cast<quint16>(mSimTable[i].Course/OBX_TRK_BEARINGCOURSE_LSB);
     mlTrackTable[i].GroundSpeed   = static_cast<quint16>(mSimTable[i].GroundSpeed/OBX_TRK_SPEED_LSB);
+    //
+    sprintf(mlTrackTable[i].CallSing,"TOTO");
   }
 
   mObelixSimThread->PushTracks(mlTrackTable, mSimTableSize);
@@ -355,10 +391,10 @@ void MainWindow::on_pbxClearSimGenerated_clicked()
 
 void MainWindow::on_pbxRunSim_clicked()
 {
-    mSimTimer->start(ui->sbxSimPeriod->value());
+  mSimTimer->start(ui->sbxSimPeriod->value());
 }
 
 void MainWindow::on_pbxStopSim_clicked()
 {
-    mSimTimer->stop();
+  mSimTimer->stop();
 }

@@ -6,7 +6,22 @@ void CalcPresistence(int pStartIxd, int pStopIdx, QImage* pImageSrc, QImage &pIm
   {
     for (int j=0; j<pImageSrc->height(); j++)
     {
-      pImageSrc->setPixel(i,j,qRgb(0,qMin(qGreen(pImageAdd.pixel(i,j))+pPersistenceRatio*qGreen(pImageSrc->pixel(i,j)), 255.0),0));
+      // Black point
+     /* if (((pImageAdd.pixel(i,j)&0x00FFFFFF) == 0) && ((pImageSrc->pixel(i,j)&0x00FFFFFF) == 0))
+      {
+        continue;
+      }
+
+
+
+
+      //pImageSrc->setPixel(i,j, pImageAdd.pixel(i,j) + pPersistenceRatio*qRed(pImageSrc->pixel(i,j)));
+
+      pImageSrc->setPixel(i,j,qRgb(qMin(qRed(pImageAdd.pixel(i,j))   + pPersistenceRatio*qRed(pImageSrc->pixel(i,j))  , 255.0),
+                                   qMin(qGreen(pImageAdd.pixel(i,j)) + pPersistenceRatio*qGreen(pImageSrc->pixel(i,j)), 255.0),
+                                   qMin(qBlue(pImageAdd.pixel(i,j))  + pPersistenceRatio*qBlue(pImageSrc->pixel(i,j)) , 255.0)));*/
+
+      //pImageSrc->setPixel(i,j,qRgb(0,qMin(qGreen(pImageAdd.pixel(i,j))+pPersistenceRatio*qGreen(pImageSrc->pixel(i,j)), 255.0),0));
     }
   }
 }
