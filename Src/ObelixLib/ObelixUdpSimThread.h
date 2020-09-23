@@ -34,6 +34,12 @@ public:
     inline void SetVideoMode(uint pVal) {mVideoMode = pVal;}
     inline uint VideoMode() const {return mVideoMode;}
 
+
+    inline void SetPlatformHeading(uint pVal) {mPlatformHeading = pVal;}
+    inline double PlatformHeading() const {return mPlatformHeading;}
+
+
+
     void SetVideoIntensity(double pVal);
     double VideoIntensity();
 
@@ -78,6 +84,7 @@ private:
   uint mVideoMode;
 
 
+
   QHash<uint16_t, T_ObelixTrack> mTrackTable;
 
 
@@ -88,6 +95,8 @@ private:
   double mVideoNoise;
 
   double mRange;
+
+  double mPlatformHeading;
 
 };
 

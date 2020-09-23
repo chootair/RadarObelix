@@ -21,6 +21,7 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->sbxRange->setValue(mObelixSimThread->Range());
   ui->sbxIntensty->setValue(mObelixSimThread->VideoIntensity());
   ui->sbxSimNoise->setValue(mObelixSimThread->VideoNoise());
+  ui->sbxPlatformHeading->setValue(mObelixSimThread->PlatformHeading());
 
   // DISPLAY
   ui->sbxScopeDisplayRange->setValue(ui->olxPlot->RangeNm());
@@ -28,6 +29,10 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->ckxDispVideo->setChecked(ui->olxPlot->DisplayVideo());
   ui->ckxDispTracks->setChecked(ui->olxPlot->DisplayTracks());
   ui->ckxDispCompas->setChecked(ui->olxPlot->DisplayCompas());
+  ui->ckxDispAircraft->setChecked(ui->olxPlot->DisplayAircraft());
+  ui->ckxDispHeading->setChecked(ui->olxPlot->DisplayHeading());
+  ui->ckxNorthUp->setChecked(ui->olxPlot->NorthUp());
+
   ui->ckxDispAntenna->setChecked(ui->olxPlot->DisplayAntenna());
   ui->ckxDispRangeLimit->setChecked(ui->olxPlot->DisplayRangeLimit());
   ui->ckxDispRangeRings->setChecked(ui->olxPlot->DisplayRangeRings());
@@ -51,6 +56,8 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->pbxColorCompas    ->SetColor(ui->olxPlot->ColorCompas());
   ui->pbxColorTrack     ->SetColor(ui->olxPlot->ColorTracks());
   ui->pbxColorVideo     ->SetColor(ui->olxPlot->ColorVideo());
+  ui->pbxColorAircraft  ->SetColor(ui->olxPlot->ColorAircraft());
+  ui->pbxColorHeading   ->SetColor(ui->olxPlot->ColorHeading());
 
   connect(ui->pbxColorAntenna, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
   connect(ui->pbxColorRangeLimit, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
@@ -58,8 +65,8 @@ MainWindow::MainWindow(QWidget *parent) :
   connect(ui->pbxColorCompas, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
   connect(ui->pbxColorTrack, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
   connect(ui->pbxColorVideo, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
-
-
+ connect(ui->pbxColorAircraft, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
+ connect(ui->pbxColorHeading, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
 
 
 
@@ -82,6 +89,8 @@ void MainWindow::OnColorChanged(QColor pColor)
   ui->olxPlot->SetColorCompas    (ui->pbxColorCompas    ->Color());
   ui->olxPlot->SetColorTracks    (ui->pbxColorTrack     ->Color());
   ui->olxPlot->SetColorVideo     (ui->pbxColorVideo     ->Color());
+  ui->olxPlot->SetColorAircraft  (ui->pbxColorAircraft  ->Color());
+  ui->olxPlot->SetColorHeading   (ui->pbxColorHeading   ->Color());
 }
 
 
@@ -203,6 +212,27 @@ void MainWindow::on_ckxDispCompas_stateChanged(int arg1)
   ui->olxPlot->RefreshScope();
 }
 
+void MainWindow::on_ckxDispAircraft_stateChanged(int arg1)
+{
+  Q_UNUSED(arg1);
+  ui->olxPlot->SetDisplayAircraft(ui->ckxDispAircraft->isChecked());
+  ui->olxPlot->RefreshScope();
+}
+
+void MainWindow::on_ckxDispHeading_stateChanged(int arg1)
+{
+  Q_UNUSED(arg1);
+  ui->olxPlot->SetDisplayHeading(ui->ckxDispHeading->isChecked());
+  ui->olxPlot->RefreshScope();
+}
+
+void MainWindow::on_ckxNorthUp_stateChanged(int arg1)
+{
+    Q_UNUSED(arg1);
+    ui->olxPlot->SetNorthUp(ui->ckxNorthUp->isChecked());
+    ui->olxPlot->RefreshScope();
+}
+
 void MainWindow::on_ckxDispVideo_stateChanged(int arg1)
 {
   Q_UNUSED(arg1);
@@ -240,6 +270,11 @@ void MainWindow::on_sbxSimNoise_valueChanged(double arg1)
 void MainWindow::on_sbxRange_valueChanged(int arg1)
 {
   mObelixSimThread->SetRange(arg1);
+}
+
+void MainWindow::on_sbxPlatformHeading_valueChanged(double arg1)
+{
+    mObelixSimThread->SetPlatformHeading(arg1);
 }
 
 
@@ -398,3 +433,11 @@ void MainWindow::on_pbxStopSim_clicked()
 {
   mSimTimer->stop();
 }
+
+
+
+
+
+
+
+

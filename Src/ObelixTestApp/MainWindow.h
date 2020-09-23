@@ -87,6 +87,14 @@ private slots:
 
   void on_pbxStopSim_clicked();
 
+  void on_sbxPlatformHeading_valueChanged(double arg1);
+
+  void on_ckxDispAircraft_stateChanged(int arg1);
+
+  void on_ckxDispHeading_stateChanged(int arg1);
+
+  void on_ckxNorthUp_stateChanged(int arg1);
+
 private:
   void BuildSimTrackTable();
   void PushSimTrackTable();

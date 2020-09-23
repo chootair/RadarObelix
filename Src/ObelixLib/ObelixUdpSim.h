@@ -34,7 +34,7 @@ public:
 
 
 
-  void SendVideoBeam(double pStartAzimut, double pAzimuthWidth, double pStartRange, double pRangeWidth, int pVideoMode);
+  void SendVideoBeam(double pHeading, double pStartAzimut, double pAzimuthWidth, double pStartRange, double pRangeWidth, int pVideoMode);
   void SendTrackTable();
 
 
@@ -47,7 +47,7 @@ public slots:
 
 private:
 
- void BuildVideoBeam(double pStartAzimut, double pAzimuthWidth, double pStartRange, double pRangeWidth, int pVideoMode);
+ void BuildVideoBeam(double pHeading, double pStartAzimut, double pAzimuthWidth, double pStartRange, double pRangeWidth, int pVideoMode);
 
 private:
   // Video beam parameters

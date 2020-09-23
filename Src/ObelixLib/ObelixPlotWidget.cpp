@@ -65,6 +65,7 @@ ObelixPlotWidget::ObelixPlotWidget(QWidget *parent) : QOpenGLWidget(parent)
   mElapsedTime = 0;
 
   mLastAzimuthDeg = 0;
+  mLastHeadingDeg = 0;
 
 
 
@@ -80,6 +81,9 @@ ObelixPlotWidget::ObelixPlotWidget(QWidget *parent) : QOpenGLWidget(parent)
   mDisplayCompas = true;
   mDisplayVideo = true;
   mDisplayTracks = true;
+  mDisplayAircraft = true;
+  //
+  mNorthUp = true;
 
   mColorAntenna    = Qt::green;
   mColorRangeLimit = Qt::green;
@@ -87,6 +91,8 @@ ObelixPlotWidget::ObelixPlotWidget(QWidget *parent) : QOpenGLWidget(parent)
   mColorCompas     = Qt::green;
   mColorVideo      = Qt::green;
   mColorTracks     = Qt::white;
+  mColorAircraft   = Qt::green;
+  mColorHeading    = Qt::red;
 
 
   mNeedToPaintInfo = true;
@@ -198,9 +204,11 @@ void ObelixPlotWidget::SetMyGeometry()
 
 void ObelixPlotWidget::PaintVideoCells(QPainter *pPainter)
 {
+  double lAzimuthOffset = 0;
+
   pPainter->setPen(Qt::NoPen);
   QBrush lBrush(Qt::black);
-  
+
   // Lock FIFO
   mFifoObelixVideo.mFifoLocker->lockForWrite();
   
@@ -213,16 +221,27 @@ void ObelixPlotWidget::PaintVideoCells(QPainter *pPainter)
   {
     mLastAzimuthDeg = 0;
   }
+
+  // Reset heading
+  if (*(mFifoObelixVideo.mFifoIndexPtr) > 0)
+  {
+      mLastHeadingDeg = mFifoVideoPtr[0].HeadingDeg;
+  }
+
+  // Heading Up
+  if (mNorthUp == false)
+  {
+    lAzimuthOffset = -mLastHeadingDeg;
+  }
   
   // Loop on message
   for (uint i=0; i<(*(mFifoObelixVideo.mFifoIndexPtr)); i++)
   {
-    double lCosStart = cos(mFifoVideoPtr[i].StartAzDeg*DEG_TO_RAD);
-    double lSinStart = sin(mFifoVideoPtr[i].StartAzDeg*DEG_TO_RAD);
-    double lCosEnd   = cos(mFifoVideoPtr[i].EndAzDeg*DEG_TO_RAD);
-    double lSinEnd   = sin(mFifoVideoPtr[i].EndAzDeg*DEG_TO_RAD);
-    
-    
+    double lCosStart = cos((lAzimuthOffset + mFifoVideoPtr[i].StartAzDeg) * DEG_TO_RAD);
+    double lSinStart = sin((lAzimuthOffset + mFifoVideoPtr[i].StartAzDeg) * DEG_TO_RAD);
+    double lCosEnd   = cos((lAzimuthOffset + mFifoVideoPtr[i].EndAzDeg  ) * DEG_TO_RAD);
+    double lSinEnd   = sin((lAzimuthOffset + mFifoVideoPtr[i].EndAzDeg  ) * DEG_TO_RAD);
+
     mLastAzimuthDeg = qMax(mLastAzimuthDeg, mFifoVideoPtr[i].EndAzDeg);
     
     //
@@ -404,7 +423,6 @@ void ObelixPlotWidget::PaintTools(QPainter *pPainter)
     }
   }
 
-
   // Compas
   if (mDisplayCompas == true)
   {
@@ -462,11 +480,46 @@ void ObelixPlotWidget::PaintTools(QPainter *pPainter)
 
     }
   }
+
+  // Rotate for Aircraft & Heading
+  if (mNorthUp == true)
+  {
+    pPainter->rotate(mLastHeadingDeg);
+  }
+
+  // Aircraft
+  if (mDisplayAircraft == true)
+  {
+      int lAftB = 6;
+      int lAftW = 20;
+      int lAftH = 10;
+
+
+      static const QPointF aircraft[13] = {
+          QPointF(0, -20),
+          QPointF(lAftB, -5),
+          QPointF(lAftW, 0),
+          QPointF(lAftW, 5),
+          QPointF(lAftB, 2),
+          QPointF(lAftB-2, 10),
+          QPointF(lAftB+4, 15),
+          QPointF(-(lAftB+4), 15),
+          QPointF(-(lAftB-2), 10),
+          QPointF(-lAftB, 2),
+          QPointF(-lAftW, 5),
+          QPointF(-lAftW, 0),
+          QPointF(-lAftB, -5),
+      };
+
+      pPainter->setPen(mColorAircraft);
+      pPainter->drawPolygon(aircraft,13);
+  }
 }
 
 
 void ObelixPlotWidget::PaintControl()
 {
+    double lAzimuthOffset = 0;
   QPainter lScopeVideoPainter(mScopeVideoImg);
   QPainter lWidgetPainter(mWidgetImg);
 
@@ -542,8 +595,33 @@ void ObelixPlotWidget::PaintControl()
   // Antenna
   if (mDisplayAntenna == true)
   {
+      if (mNorthUp == false)
+      {
+        lAzimuthOffset = -mLastHeadingDeg;
+      }
+      else
+      {
+          lAzimuthOffset = 0;
+      }
+
     lWidgetPainter.setPen(mColorAntenna);
-    lWidgetPainter.drawLine(mXCtr, mYCtr, mXCtr+mPlotRad*sin(mLastAzimuthDeg*DEG_TO_RAD), mYCtr-mPlotRad*cos(mLastAzimuthDeg*DEG_TO_RAD));
+    lWidgetPainter.drawLine(mXCtr, mYCtr, mXCtr+mPlotRad*sin((lAzimuthOffset+mLastAzimuthDeg)*DEG_TO_RAD), mYCtr-mPlotRad*cos((lAzimuthOffset+mLastAzimuthDeg)*DEG_TO_RAD));
+  }
+
+  // Heading
+  if (mDisplayHeading == true)
+  {
+      if (mNorthUp == true)
+      {
+        lAzimuthOffset = mLastHeadingDeg;
+      }
+      else
+      {
+          lAzimuthOffset = 0;
+      }
+
+    lWidgetPainter.setPen(mColorHeading);
+    lWidgetPainter.drawLine(mXCtr, mYCtr, mXCtr+0.8*mPlotRad*sin(lAzimuthOffset*DEG_TO_RAD), mYCtr-0.8*mPlotRad*cos(lAzimuthOffset*DEG_TO_RAD));
   }
 
   //

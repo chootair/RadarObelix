@@ -79,12 +79,12 @@ void ObelixUdpSim::SetVideoBeamParameters(int pNbLevel, int pNbCells)
   }
 }
 
-void ObelixUdpSim::SendVideoBeam(double pStartAzimut, double pAzimuthWidth, double pStartRange, double pRangeWidth, int pVideoMode)
+void ObelixUdpSim::SendVideoBeam(double pHeading, double pStartAzimut, double pAzimuthWidth, double pStartRange, double pRangeWidth, int pVideoMode)
 {
   qint64 lWriteSz=0;
 
   // Build
-  BuildVideoBeam(pStartAzimut, pAzimuthWidth, pStartRange, pRangeWidth, pVideoMode);
+  BuildVideoBeam(pHeading, pStartAzimut, pAzimuthWidth, pStartRange, pRangeWidth, pVideoMode);
 
   // Send beam packets
   for (int lIdxBeam=0; lIdxBeam<mBeamSize; lIdxBeam++)
@@ -139,7 +139,7 @@ void ObelixUdpSim::SetTrackTableRef(QHash<uint16_t, T_ObelixTrack> *pTrackTable)
 }
 
 
-void ObelixUdpSim::BuildVideoBeam(double pStartAzimut, double pAzimuthWidth, double pStartRange, double pRangeWidth, int pVideoMode)
+void ObelixUdpSim::BuildVideoBeam(double pHeading, double pStartAzimut, double pAzimuthWidth, double pStartRange, double pRangeWidth, int pVideoMode)
 {
    QHash<uint16_t, T_ObelixTrack>::iterator lTrackIter;
   int lIdxBeam = 0;
@@ -160,6 +160,9 @@ void ObelixUdpSim::BuildVideoBeam(double pStartAzimut, double pAzimuthWidth, dou
       // Message counter
       mBeam[lIdxBeam].Number = mVideoMsgNb;
       mVideoMsgNb++;
+
+      // Platform heading
+      mBeam[lIdxBeam].HeadingDeg = pHeading;
 
       // Sub-Beam start and stop azimut
       mBeam[lIdxBeam].StartAzDeg = pStartAzimut + lIdxSubBeam*lSubBeamAzWidthDeg;

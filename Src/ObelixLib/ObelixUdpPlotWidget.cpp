@@ -30,7 +30,7 @@ ObelixUdpPlotWidget::ObelixUdpPlotWidget(QWidget *parent) : ObelixPlotWidget(par
 ObelixUdpPlotWidget::~ObelixUdpPlotWidget()
 {
   Stop();
-  Sleep(200);
+  //Sleep(200);
   delete mTimer;
   delete mObelixUdpReaderTrack;
   delete mObelixUdpReaderVideo;

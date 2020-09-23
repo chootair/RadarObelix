@@ -152,7 +152,7 @@ void ObelixUdpSimThread::OnTimerTick()
   for (uint lIdxBeam=0; lIdxBeam<lTickBeamRepeat; lIdxBeam++)
   {
     // Send video beam
-    mObelixUdpGene->SendVideoBeam(mAntennaPos,mBeamWidth,0,mRange,mVideoMode);
+    mObelixUdpGene->SendVideoBeam(mPlatformHeading, mAntennaPos,mBeamWidth,0,mRange,mVideoMode);
 
     // Update antenna position
     mAntennaPos += mBeamWidth;

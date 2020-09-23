@@ -13,8 +13,9 @@ typedef struct _T_ObelixVideoMessage
 {
   uint16_t Number;
   uint16_t CellCount;
-  double   StartAzDeg;
-  double   EndAzDeg;
+  double   HeadingDeg;
+  double   StartAzDeg; // North reference
+  double   EndAzDeg;   // North reference
   double   StartRgNm;
   double   CellWidthNm;
   uint8_t  VideoMode;

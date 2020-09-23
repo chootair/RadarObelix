@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1031</width>
+    <width>1097</width>
     <height>702</height>
    </rect>
   </property>
@@ -406,6 +406,13 @@
             </property>
            </widget>
           </item>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="sbxRange">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
           <item row="2" column="0">
            <widget class="QLabel" name="label_4">
             <property name="text">
@@ -420,10 +427,23 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="1">
-           <widget class="QSpinBox" name="sbxRange">
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_27">
+            <property name="text">
+             <string>Heading [°]</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QDoubleSpinBox" name="sbxPlatformHeading">
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="minimum">
+             <double>-361.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>361.000000000000000</double>
             </property>
            </widget>
           </item>
@@ -962,7 +982,7 @@
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
             <property name="decimals">
-             <number>3</number>
+             <number>5</number>
             </property>
             <property name="minimum">
              <double>-1.000000000000000</double>
@@ -971,7 +991,7 @@
              <double>1.000000000000000</double>
             </property>
             <property name="singleStep">
-             <double>0.001000000000000</double>
+             <double>0.000100000000000</double>
             </property>
            </widget>
           </item>
@@ -982,14 +1002,14 @@
             </property>
            </widget>
           </item>
-          <item row="5" column="0">
+          <item row="6" column="0">
            <widget class="QCheckBox" name="ckxDispAntenna">
             <property name="text">
              <string>Antenna</string>
             </property>
            </widget>
           </item>
-          <item row="6" column="0">
+          <item row="7" column="0">
            <widget class="QCheckBox" name="ckxDispRangeLimit">
             <property name="text">
              <string>Range limit</string>
@@ -1013,12 +1033,9 @@
             <property name="singleStep">
              <double>0.010000000000000</double>
             </property>
-            <property name="stepType">
-             <enum>QAbstractSpinBox::AdaptiveDecimalStepType</enum>
-            </property>
            </widget>
           </item>
-          <item row="12" column="0">
+          <item row="15" column="0">
            <widget class="QCheckBox" name="ckxDispTracks">
             <property name="text">
              <string>Tracks</string>
@@ -1032,35 +1049,35 @@
             </property>
            </widget>
           </item>
-          <item row="14" column="0" colspan="2">
+          <item row="18" column="0" colspan="2">
            <widget class="QPushButton" name="pbxClearScope">
             <property name="text">
              <string>Clear plot</string>
             </property>
            </widget>
           </item>
-          <item row="7" column="1">
+          <item row="8" column="1">
            <widget class="ColorPickerButton" name="pbxColorRangeRing">
             <property name="text">
              <string/>
             </property>
            </widget>
           </item>
-          <item row="7" column="0">
+          <item row="8" column="0">
            <widget class="QCheckBox" name="ckxDispRangeRings">
             <property name="text">
              <string>Range Rings</string>
             </property>
            </widget>
           </item>
-          <item row="9" column="0">
+          <item row="10" column="0">
            <widget class="QCheckBox" name="ckxDispCompas">
             <property name="text">
              <string>Compas</string>
             </property>
            </widget>
           </item>
-          <item row="6" column="1">
+          <item row="7" column="1">
            <widget class="ColorPickerButton" name="pbxColorRangeLimit">
             <property name="text">
              <string/>
@@ -1074,22 +1091,29 @@
             </property>
            </widget>
           </item>
-          <item row="5" column="1">
+          <item row="6" column="1">
            <widget class="ColorPickerButton" name="pbxColorAntenna">
             <property name="text">
              <string/>
             </property>
            </widget>
           </item>
-          <item row="4" column="0" colspan="2">
+          <item row="13" column="0" colspan="2">
+           <widget class="Line" name="line_4">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0" colspan="2">
            <widget class="Line" name="line_2">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
            </widget>
           </item>
-          <item row="10" column="0" colspan="2">
-           <widget class="Line" name="line_4">
+          <item row="17" column="0" colspan="2">
+           <widget class="Line" name="line_3">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
@@ -1111,38 +1135,66 @@
             </property>
            </widget>
           </item>
-          <item row="13" column="0" colspan="2">
-           <widget class="Line" name="line_3">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item row="11" column="0">
+          <item row="14" column="0">
            <widget class="QCheckBox" name="ckxDispVideo">
             <property name="text">
              <string>Video</string>
             </property>
            </widget>
           </item>
-          <item row="9" column="1">
+          <item row="10" column="1">
            <widget class="ColorPickerButton" name="pbxColorCompas">
             <property name="text">
              <string/>
             </property>
            </widget>
           </item>
-          <item row="11" column="1">
+          <item row="14" column="1">
            <widget class="ColorPickerButton" name="pbxColorVideo">
             <property name="text">
              <string/>
             </property>
            </widget>
           </item>
-          <item row="12" column="1">
+          <item row="15" column="1">
            <widget class="ColorPickerButton" name="pbxColorTrack">
             <property name="text">
              <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="1">
+           <widget class="ColorPickerButton" name="pbxColorHeading">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="0">
+           <widget class="QCheckBox" name="ckxDispAircraft">
+            <property name="text">
+             <string>Aircraft</string>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="0">
+           <widget class="QCheckBox" name="ckxDispHeading">
+            <property name="text">
+             <string>Heading</string>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="1">
+           <widget class="ColorPickerButton" name="pbxColorAircraft">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QCheckBox" name="ckxNorthUp">
+            <property name="text">
+             <string>North Up</string>
             </property>
            </widget>
           </item>
