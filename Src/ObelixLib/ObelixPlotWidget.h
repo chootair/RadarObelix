@@ -29,6 +29,11 @@ typedef struct _T_PlotTrack
   qint64        LastUpdate;
 }T_PlotTrack;
 
+typedef enum _T_PersistMode
+{
+  PersistComposition = 0,
+  PersistPixel
+}T_PersistMode;
 
 
 
@@ -43,6 +48,9 @@ public:
 
   void SetPresistenceRatio(double pRatio);
   inline double PresistenceRatio() const { return mPersistRatio;}
+
+  void SetPersistenceMode(T_PersistMode pPersistMode) {mPersistMode = pPersistMode;}
+  inline T_PersistMode PersistenceMode() const { return mPersistMode;}
 
 
   inline double RangeNm() const {return mRangeNm;}
@@ -111,6 +119,7 @@ private:
   void SetMyGeometry();
   void PaintVideoCells(QPainter* pPainter);
   void PaintTrackPlots(QPainter* pPainter);
+  void PaintHeadingFeatures(QPainter* pPainter);
   void PaintTools(QPainter* pPainter);
   int ReadTrackPlots();
 
@@ -118,11 +127,13 @@ private:
 
   QImage* mScopeVideoImg;
   QImage* mScopeTrackImg;
+  QImage* mHeadingImg;
   QImage* mToolsImg;
   QImage* mWidgetImg;
-  GreenPresistImage* mPersistImg;
+  PresistImage* mPersistImg;
 
   //bool mIsPersistEnabled;
+  T_PersistMode mPersistMode;
   double mPersistRatio;
   QColor mPersistMultiplyColor;
 

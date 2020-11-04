@@ -42,13 +42,15 @@ ObelixPlotWidget::ObelixPlotWidget(QWidget *parent) : QOpenGLWidget(parent)
   mScopeVideoImg = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
   mScopeTrackImg = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
   mToolsImg      = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
+  mHeadingImg    = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
   mWidgetImg     = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
 
   
-  mPersistImg = new GreenPresistImage(800,800);
+  mPersistImg = new PresistImage(800,800);
   mPersistImg->SetPersistence(0);
   mPersistRatio = -1;
     mPersistMultiplyColor.setRgb(0,0,0);
+    mPersistMode = PersistComposition;
   
   mLbxWidget = new QLabel("SCOPE RADAR", this);
   mLbxWidget->lower();
@@ -140,6 +142,7 @@ void ObelixPlotWidget::ClearScope()
   mWidgetImg->fill(0xFF000000);
   mScopeVideoImg->fill(0xFF000000);
   mScopeTrackImg->fill(0x00000000);
+  mHeadingImg->fill(0x00000000);
   mToolsImg->fill(0x00000000);
   mPersistImg->fill(0xFF000000);
 
@@ -152,7 +155,7 @@ void ObelixPlotWidget::ClearScope()
 
 void ObelixPlotWidget::SetPresistenceRatio(double pRatio)
 {
-  //mPersistImg->SetPersistence(pRatio);
+  mPersistImg->SetPersistence(pRatio);
   mPersistRatio = pRatio;
   mPersistMultiplyColor.setRgb(240*pRatio,240*pRatio,240*pRatio);
 }
@@ -180,11 +183,14 @@ void ObelixPlotWidget::SetMyGeometry()
   mWidgetImg = new QImage(this->width(), this->height(), QImage::Format_ARGB32_Premultiplied);
   //
   delete mPersistImg;
-  mPersistImg = new GreenPresistImage(2*mPlotRad, 2*mPlotRad);
+  mPersistImg = new PresistImage(2*mPlotRad, 2*mPlotRad);
   mPersistImg->SetPersistence(0.98);
   //
   delete mScopeVideoImg;
   mScopeVideoImg = new QImage(2*mPlotRad, 2*mPlotRad, QImage::Format_ARGB32_Premultiplied);
+  //
+  delete mHeadingImg;
+  mHeadingImg = new QImage(width(), height(), QImage::Format_ARGB32_Premultiplied);
   //
   delete mToolsImg;
   mToolsImg = new QImage(width(), height(), QImage::Format_ARGB32_Premultiplied);
@@ -196,6 +202,7 @@ void ObelixPlotWidget::SetMyGeometry()
   mWidgetImg->fill(0xFF000000);
   mScopeVideoImg->fill(0xFF000000);
   mScopeTrackImg->fill(0x00000000);
+  mHeadingImg->fill(0x00000000);
   mToolsImg->fill(0x00000000);
 
   //
@@ -226,7 +233,16 @@ void ObelixPlotWidget::PaintVideoCells(QPainter *pPainter)
   if (*(mFifoObelixVideo.mFifoIndexPtr) > 0)
   {
       mLastHeadingDeg = mFifoVideoPtr[0].HeadingDeg;
+      if (mLastHeadingDeg > 360)
+      {
+          mLastHeadingDeg = mLastHeadingDeg - 360;
+      }
+      if (mLastHeadingDeg < 0)
+      {
+          mLastHeadingDeg = mLastHeadingDeg + 360;
+      }
   }
+
 
   // Heading Up
   if (mNorthUp == false)
@@ -395,6 +411,53 @@ void ObelixPlotWidget::PaintTrackPlots(QPainter *pPainter)
   }
 }
 
+void ObelixPlotWidget::PaintHeadingFeatures(QPainter *pPainter)
+{
+    // Translate painter
+    pPainter->translate(mXCtr,mYCtr);
+
+    // Rotate for Aircraft & Heading
+    if (mNorthUp == true)
+    {
+      pPainter->rotate(mLastHeadingDeg);
+    }
+
+    // Heading
+    if (mDisplayHeading == true)
+    {
+      pPainter->setPen(mColorHeading);
+      pPainter->drawLine(0, 0, 0, -0.8*mPlotRad);
+    }
+
+    // Aircraft
+    if (mDisplayAircraft == true)
+    {
+        int lAftB = 6;
+        int lAftW = 20;
+        int lAftH = 10;
+
+
+        static const QPointF aircraft[13] = {
+            QPointF(0, -20),
+            QPointF(lAftB, -5),
+            QPointF(lAftW, 0),
+            QPointF(lAftW, 5),
+            QPointF(lAftB, 2),
+            QPointF(lAftB-2, 10),
+            QPointF(lAftB+4, 15),
+            QPointF(-(lAftB+4), 15),
+            QPointF(-(lAftB-2), 10),
+            QPointF(-lAftB, 2),
+            QPointF(-lAftW, 5),
+            QPointF(-lAftW, 0),
+            QPointF(-lAftB, -5),
+        };
+
+        pPainter->setPen(mColorAircraft);
+        pPainter->drawPolygon(aircraft,13);
+    }
+}
+
 void ObelixPlotWidget::PaintTools(QPainter *pPainter)
 {
   // Translate painter
@@ -480,46 +543,12 @@ void ObelixPlotWidget::PaintTools(QPainter *pPainter)
 
     }
   }
-
-  // Rotate for Aircraft & Heading
-  if (mNorthUp == true)
-  {
-    pPainter->rotate(mLastHeadingDeg);
-  }
-
-  // Aircraft
-  if (mDisplayAircraft == true)
-  {
-      int lAftB = 6;
-      int lAftW = 20;
-      int lAftH = 10;
-
-
-      static const QPointF aircraft[13] = {
-          QPointF(0, -20),
-          QPointF(lAftB, -5),
-          QPointF(lAftW, 0),
-          QPointF(lAftW, 5),
-          QPointF(lAftB, 2),
-          QPointF(lAftB-2, 10),
-          QPointF(lAftB+4, 15),
-          QPointF(-(lAftB+4), 15),
-          QPointF(-(lAftB-2), 10),
-          QPointF(-lAftB, 2),
-          QPointF(-lAftW, 5),
-          QPointF(-lAftW, 0),
-          QPointF(-lAftB, -5),
-      };
-
-      pPainter->setPen(mColorAircraft);
-      pPainter->drawPolygon(aircraft,13);
-  }
 }
 
 
 void ObelixPlotWidget::PaintControl()
 {
-    double lAzimuthOffset = 0;
+  double lAzimuthOffset = 0;
   QPainter lScopeVideoPainter(mScopeVideoImg);
   QPainter lWidgetPainter(mWidgetImg);
 
@@ -531,7 +560,6 @@ void ObelixPlotWidget::PaintControl()
     mScopeVideoImg->fill(0xFF000000);
   }
 
-
   // Cell table
   if (mDisplayVideo == true)
   {
@@ -541,18 +569,29 @@ void ObelixPlotWidget::PaintControl()
     // Enable persistance
     if (mPersistRatio > 0)
     {
-      QPainter lPersistPainter(mPersistImg);
-
-      // Light the previous image
-      if (mPersistRatio<1)
+      if (PersistComposition == mPersistMode)
       {
-        lPersistPainter.setCompositionMode( QPainter::CompositionMode_Multiply);
-        lPersistPainter.fillRect(0,0,mPersistImg->width(), mPersistImg->height(),QBrush(mPersistMultiplyColor));
-      }
+        QPainter lPersistPainter(mPersistImg);
 
-      // Add the new
-      lPersistPainter.setCompositionMode( QPainter::CompositionMode_Plus);
-      lPersistPainter.drawImage(0,0, *mScopeVideoImg);
+        // Light the previous image
+        if (mPersistRatio<1)
+        {
+          lPersistPainter.setCompositionMode( QPainter::CompositionMode_Multiply);
+          lPersistPainter.fillRect(0,0,mPersistImg->width(), mPersistImg->height(),QBrush(mPersistMultiplyColor));
+        }
+
+        // Add the new
+        lPersistPainter.setCompositionMode( QPainter::CompositionMode_Plus);
+        lPersistPainter.drawImage(0,0, *mScopeVideoImg);
+      }
+      else if (PersistPixel == mPersistMode)
+      {
+        mPersistImg->AppendImage(*mScopeVideoImg);
+      }
+      else
+      {
+        qDebug("Oops");
+      }
 
       // Paint into the widget image
       lWidgetPainter.drawImage(mXCtr-mPersistImg->width()/2, mYCtr-mPersistImg->height()/2, *mPersistImg);
@@ -591,6 +630,14 @@ void ObelixPlotWidget::PaintControl()
   }
   lWidgetPainter.drawImage(0, 0, *mToolsImg);
 
+  // Paint heading
+  if ((mDisplayAircraft == true) || (mDisplayHeading == true))
+  {
+      QPainter lHeadingPainter(mHeadingImg);
+      mHeadingImg->fill(0x00000000);
+      PaintHeadingFeatures(&lHeadingPainter);
+      lWidgetPainter.drawImage(0, 0, *mHeadingImg);
+  }
 
   // Antenna
   if (mDisplayAntenna == true)
@@ -606,22 +653,6 @@ void ObelixPlotWidget::PaintControl()
 
     lWidgetPainter.setPen(mColorAntenna);
     lWidgetPainter.drawLine(mXCtr, mYCtr, mXCtr+mPlotRad*sin((lAzimuthOffset+mLastAzimuthDeg)*DEG_TO_RAD), mYCtr-mPlotRad*cos((lAzimuthOffset+mLastAzimuthDeg)*DEG_TO_RAD));
-  }
-
-  // Heading
-  if (mDisplayHeading == true)
-  {
-      if (mNorthUp == true)
-      {
-        lAzimuthOffset = mLastHeadingDeg;
-      }
-      else
-      {
-          lAzimuthOffset = 0;
-      }
-
-    lWidgetPainter.setPen(mColorHeading);
-    lWidgetPainter.drawLine(mXCtr, mYCtr, mXCtr+0.8*mPlotRad*sin(lAzimuthOffset*DEG_TO_RAD), mYCtr-0.8*mPlotRad*cos(lAzimuthOffset*DEG_TO_RAD));
   }
 
   //

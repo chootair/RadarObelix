@@ -1,20 +1,21 @@
-#ifndef GREENPRESISTIMAGE_H
-#define GREENPRESISTIMAGE_H
+#ifndef PRESISTIMAGE_H
+#define PRESISTIMAGE_H
 
 #include <QImage>
 #include <QtConcurrent/QtConcurrentRun>
 
 
-class GreenPresistImage : public QImage
+class PresistImage : public QImage
 {
 public:
-  GreenPresistImage(int pWidth, int pHeight);
+  PresistImage(int pWidth, int pHeight);
   void AppendImage(QImage &pImage);
   void SetPersistence(double pPersistenceRatio);
   void Clear();
 
 private:
   double mPersistenceRatio;
+  bool   mOnlyOnGreen;
 };
 
-#endif // GREENPRESISTIMAGE_H
+#endif // PRESISTIMAGE_H

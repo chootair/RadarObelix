@@ -95,6 +95,8 @@ private slots:
 
   void on_ckxNorthUp_stateChanged(int arg1);
 
+  void on_cbxPresistanceMode_currentIndexChanged(int index);
+
 private:
   void BuildSimTrackTable();
   void PushSimTrackTable();

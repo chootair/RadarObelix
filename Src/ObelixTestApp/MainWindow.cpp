@@ -37,6 +37,7 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->ckxDispRangeLimit->setChecked(ui->olxPlot->DisplayRangeLimit());
   ui->ckxDispRangeRings->setChecked(ui->olxPlot->DisplayRangeRings());
   ui->sbxPresistance->setValue(ui->olxPlot->PresistenceRatio());
+  ui->cbxPresistanceMode->setCurrentIndex(ui->olxPlot->PersistenceMode());
 
   mMainTimer = new QTimer(this);
   connect(mMainTimer,&QTimer::timeout,this,&MainWindow::OnTimerTick);
@@ -252,6 +253,11 @@ void MainWindow::on_sbxPresistance_valueChanged(double arg1)
   ui->olxPlot->SetPresistenceRatio(arg1);
 }
 
+void MainWindow::on_cbxPresistanceMode_currentIndexChanged(int index)
+{
+  ui->olxPlot->SetPersistenceMode(static_cast<T_PersistMode>(index));
+}
+
 void MainWindow::on_sbxDisplayPxKtsRatio_valueChanged(double arg1)
 {
   ui->olxPlot->SetDisplayPxKtsRatio(arg1);
@@ -433,6 +439,8 @@ void MainWindow::on_pbxStopSim_clicked()
 {
   mSimTimer->stop();
 }
+
+
 
 
 

@@ -33,4 +33,4 @@ FORMS += MainWindow.ui
 # ----------------------------------------------------------
 # LIBS
 INCLUDEPATH += ../ObelixLib
-LIBS += -L$${ROOT_FOLDER}/Lib -lObelixLib
+LIBS += -L$${ROOT_FOLDER}/Lib -lObelixLib$${SUFFIX}
