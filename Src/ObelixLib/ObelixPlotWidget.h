@@ -9,6 +9,7 @@
 #include <QReadWriteLock>
 #include <QDateTime>
 
+#include "ObelixLibDef.h"
 #include "Obelix.h"
 #include "PresistImage.h"
 
@@ -37,7 +38,7 @@ typedef enum _T_PersistMode
 
 
 
-class ObelixPlotWidget : public QOpenGLWidget
+class OBELIXLIBSHARED_EXPORT ObelixPlotWidget : public QOpenGLWidget
 {
   Q_OBJECT
 public:
@@ -82,7 +83,7 @@ public:
   inline bool DisplayTracks    () const {return mDisplayTracks;}
   inline bool DisplayAircraft  () const {return mDisplayAircraft;}
   inline bool DisplayHeading   () const {return mDisplayHeading;}
-  inline bool SetNorthUp          (bool pEnable) {mNorthUp = pEnable;}
+  inline void SetNorthUp          (bool pEnable) {mNorthUp = pEnable;}
   inline void SetDisplayAntenna   (bool pEnable) {mDisplayAntenna = pEnable;}
   inline void SetDisplayRangeLimit(bool pEnable) {mDisplayRangeLimit = pEnable; mNeedToPaintInfo=true;}
   inline void SetDisplayRangeRings(bool pEnable) {mDisplayRangeRings = pEnable; mNeedToPaintInfo=true;}

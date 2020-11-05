@@ -7,7 +7,7 @@
 
 #include "ObelixUdpSim.h"
 
-class ObelixUdpSimThread : public QThread
+class OBELIXLIBSHARED_EXPORT ObelixUdpSimThread : public QThread
 {
 public:
   ObelixUdpSimThread();

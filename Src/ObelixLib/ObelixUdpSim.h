@@ -4,9 +4,10 @@
 #include <QObject>
 #include <QUdpSocket>
 
+#include "ObelixLibDef.h"
 #include "Obelix.h"
 
-class ObelixUdpSim : public QObject
+class OBELIXLIBSHARED_EXPORT ObelixUdpSim : public QObject
 {
   Q_OBJECT
 public:

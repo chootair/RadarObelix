@@ -6,7 +6,7 @@
 #include "ObelixPlotWidget.h"
 #include "ObelixUdpReaderThread.h"
 
-class ObelixUdpPlotWidget : public ObelixPlotWidget
+class OBELIXLIBSHARED_EXPORT ObelixUdpPlotWidget : public ObelixPlotWidget
 {
   Q_OBJECT
 public:

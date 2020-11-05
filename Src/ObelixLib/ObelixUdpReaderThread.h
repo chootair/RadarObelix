@@ -7,9 +7,10 @@
 #include <QUdpSocket>
 
 //
+#include "ObelixLibDef.h"
 #include "Obelix.h"
 
-class ObelixUdpReaderThread : public QThread
+class OBELIXLIBSHARED_EXPORT ObelixUdpReaderThread : public QThread
 {
   Q_OBJECT
 
