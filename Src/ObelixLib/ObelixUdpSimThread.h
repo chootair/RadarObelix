@@ -35,7 +35,7 @@ public:
     inline uint VideoMode() const {return mVideoMode;}
 
 
-    inline void SetPlatformHeading(uint pVal) {mPlatformHeading = pVal;}
+    inline void SetPlatformHeading(double_t pVal) {mPlatformHeading = pVal;}
     inline double PlatformHeading() const {return mPlatformHeading;}
 
 

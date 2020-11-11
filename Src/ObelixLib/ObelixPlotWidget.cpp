@@ -211,7 +211,7 @@ void ObelixPlotWidget::SetMyGeometry()
 
 void ObelixPlotWidget::PaintVideoCells(QPainter *pPainter)
 {
-  double lAzimuthOffset = 0;
+  double lAzimuthOffsetDeg = 0;
 
   pPainter->setPen(Qt::NoPen);
   QBrush lBrush(Qt::black);
@@ -222,7 +222,6 @@ void ObelixPlotWidget::PaintVideoCells(QPainter *pPainter)
   // FIFO Load
   mFifoObelixVideoLoad = *(mFifoObelixVideo.mFifoIndexPtr)/(float)mFifoObelixVideo.mFifoSize*100.0;
 
-  
   // Reset antenna position
   if (*(mFifoObelixVideo.mFifoIndexPtr) >= 1)
   {
@@ -232,31 +231,39 @@ void ObelixPlotWidget::PaintVideoCells(QPainter *pPainter)
   // Reset heading
   if (*(mFifoObelixVideo.mFifoIndexPtr) > 0)
   {
-      mLastHeadingDeg = mFifoVideoPtr[0].HeadingDeg;
-      if (mLastHeadingDeg > 360)
-      {
-          mLastHeadingDeg = mLastHeadingDeg - 360;
-      }
-      if (mLastHeadingDeg < 0)
-      {
-          mLastHeadingDeg = mLastHeadingDeg + 360;
-      }
+    double lCurrentHeading = mLastHeadingDeg;
+
+    //
+    mLastHeadingDeg = mFifoVideoPtr[0].HeadingDeg;
+    if (mLastHeadingDeg > 360)
+    {
+      mLastHeadingDeg = mLastHeadingDeg - 360;
+    }
+    if (mLastHeadingDeg < 0)
+    {
+      mLastHeadingDeg = mLastHeadingDeg + 360;
+    }
+
+    if (lCurrentHeading != mLastHeadingDeg)
+    {
+      mNeedToPaintInfo = true;
+    }
   }
 
 
   // Heading Up
   if (mNorthUp == false)
   {
-    lAzimuthOffset = -mLastHeadingDeg;
+    lAzimuthOffsetDeg = -mLastHeadingDeg;
   }
   
   // Loop on message
   for (uint i=0; i<(*(mFifoObelixVideo.mFifoIndexPtr)); i++)
   {
-    double lCosStart = cos((lAzimuthOffset + mFifoVideoPtr[i].StartAzDeg) * DEG_TO_RAD);
-    double lSinStart = sin((lAzimuthOffset + mFifoVideoPtr[i].StartAzDeg) * DEG_TO_RAD);
-    double lCosEnd   = cos((lAzimuthOffset + mFifoVideoPtr[i].EndAzDeg  ) * DEG_TO_RAD);
-    double lSinEnd   = sin((lAzimuthOffset + mFifoVideoPtr[i].EndAzDeg  ) * DEG_TO_RAD);
+    double lCosStart = cos((lAzimuthOffsetDeg + mFifoVideoPtr[i].StartAzDeg) * DEG_TO_RAD);
+    double lSinStart = sin((lAzimuthOffsetDeg + mFifoVideoPtr[i].StartAzDeg) * DEG_TO_RAD);
+    double lCosEnd   = cos((lAzimuthOffsetDeg + mFifoVideoPtr[i].EndAzDeg  ) * DEG_TO_RAD);
+    double lSinEnd   = sin((lAzimuthOffsetDeg + mFifoVideoPtr[i].EndAzDeg  ) * DEG_TO_RAD);
 
     mLastAzimuthDeg = qMax(mLastAzimuthDeg, mFifoVideoPtr[i].EndAzDeg);
     
@@ -364,12 +371,20 @@ void ObelixPlotWidget::PaintVideoCells(QPainter *pPainter)
 
 void ObelixPlotWidget::PaintTrackPlots(QPainter *pPainter)
 {
+  double lAzimuthOffsetRad = 0;
+
   pPainter->setPen(mColorTracks);
   pPainter->setBrush(Qt::NoBrush);
 
 
   QPoint lTrackPt;
   QPoint lVectorPt;
+
+  // Heading Up
+  if (mNorthUp == false)
+  {
+    lAzimuthOffsetRad = -mLastHeadingDeg*DEG_TO_RAD;
+  }
 
   // Loop on plot track
   foreach (T_PlotTrack lPlotTrack, mTrackTable)
@@ -388,8 +403,8 @@ void ObelixPlotWidget::PaintTrackPlots(QPainter *pPainter)
     double lTrackRangePx    = mPlotRad/mRangeNm*lPlotTrack.Track.Distance*OBX_TRK_DISTANCE_LSB;
     double lTrackBreaingRad = static_cast<double>(lPlotTrack.Track.Bearing)*OBX_TRK_BEARINGCOURSE_LSB*DEG_TO_RAD;
     //
-    lTrackPt.setX(width()/2  + static_cast<int>(lTrackRangePx * sin(lTrackBreaingRad)));
-    lTrackPt.setY(height()/2 - static_cast<int>(lTrackRangePx * cos(lTrackBreaingRad)));
+    lTrackPt.setX(width()/2  + static_cast<int>(lTrackRangePx * sin(lAzimuthOffsetRad + lTrackBreaingRad)));
+    lTrackPt.setY(height()/2 - static_cast<int>(lTrackRangePx * cos(lAzimuthOffsetRad + lTrackBreaingRad)));
 
     // Speed Vector
     double lTrackSpeedKts = static_cast<double>(lPlotTrack.Track.GroundSpeed)*OBX_TRK_SPEED_LSB;
@@ -398,8 +413,8 @@ void ObelixPlotWidget::PaintTrackPlots(QPainter *pPainter)
     double lTrackCourseDeg = static_cast<double>(lPlotTrack.Track.Course)*OBX_TRK_BEARINGCOURSE_LSB;
     double lTrackCourseRad = lTrackCourseDeg*DEG_TO_RAD;
     //
-    lVectorPt.setX(lTrackPt.x() + static_cast<int>(lTrackSpeedPx*sin(lTrackCourseRad)));
-    lVectorPt.setY(lTrackPt.y() - static_cast<int>(lTrackSpeedPx*cos(lTrackCourseRad)));
+    lVectorPt.setX(lTrackPt.x() + static_cast<int>(lTrackSpeedPx*sin(lAzimuthOffsetRad + lTrackCourseRad)));
+    lVectorPt.setY(lTrackPt.y() - static_cast<int>(lTrackSpeedPx*cos(lAzimuthOffsetRad + lTrackCourseRad)));
 
     // Paint
     pPainter->drawRect(lTrackPt.x()-3, lTrackPt.y()-3, 6,6);
@@ -489,7 +504,16 @@ void ObelixPlotWidget::PaintTools(QPainter *pPainter)
   // Compas
   if (mDisplayCompas == true)
   {
+    double lAzimuthOffsetDeg = 0;
+
+    //
     pPainter->setPen(mColorCompas);
+
+    // Heading Up
+    if (mNorthUp == false)
+    {
+      lAzimuthOffsetDeg = -mLastHeadingDeg;
+    }
 
     //
     int lMarkWidth  = 0;
@@ -521,10 +545,12 @@ void ObelixPlotWidget::PaintTools(QPainter *pPainter)
         continue;
       }
 
+      double lMarkAngleRad = (lAzimuthOffsetDeg+iDeg)*DEG_TO_RAD;
+
       // Mark
       pPainter->setPen(QPen(mColorCompas,lMarkWidth));
-      pPainter->drawLine((mPlotRad            ) * sin(iDeg*DEG_TO_RAD), -(mPlotRad            ) * cos(iDeg*DEG_TO_RAD),
-                         (mPlotRad+lMarkLength) * sin(iDeg*DEG_TO_RAD), -(mPlotRad+lMarkLength) * cos(iDeg*DEG_TO_RAD));
+      pPainter->drawLine((mPlotRad            ) * sin(lMarkAngleRad), -(mPlotRad            ) * cos(lMarkAngleRad),
+                         (mPlotRad+lMarkLength) * sin(lMarkAngleRad), -(mPlotRad+lMarkLength) * cos(lMarkAngleRad));
 
 
       // Text
@@ -533,11 +559,18 @@ void ObelixPlotWidget::PaintTools(QPainter *pPainter)
         QSize        sz_l;
         QFontMetrics ft_metrics_l (this->font());
         QString lText = QString("%1").arg(iDeg,3,10,QChar('0'));
+
+        if (iDeg == 0)
+        {
+          lText = lText + QString("[N]");
+        }
+
+        //
         sz_l = ft_metrics_l.size(Qt::TextSingleLine, lText);
         int lTextRad = 30;
 
-        pPainter->drawText( (mPlotRad+lTextRad) * sin(iDeg*DEG_TO_RAD)  - 0.5*sz_l.width(),
-                            -(mPlotRad+lTextRad) * cos(iDeg*DEG_TO_RAD) + 0.5*sz_l.height(),lText);// ,Qt::AlignVCenter,sz_l.width(),sz_l.height(),lText);
+        pPainter->drawText( (mPlotRad+lTextRad) * sin(lMarkAngleRad)  - 0.5*sz_l.width(),
+                            -(mPlotRad+lTextRad) * cos(lMarkAngleRad) + 0.5*sz_l.height(),lText);// ,Qt::AlignVCenter,sz_l.width(),sz_l.height(),lText);
       }
 
 
@@ -614,6 +647,7 @@ void ObelixPlotWidget::PaintControl()
     {
       mScopeTrackImg->fill(0x00000000);
       PaintTrackPlots(&lScopeTrackPainter);
+
       mLastTrackPlotUpdate = lCurrentUpdate;
     }
 

@@ -5,6 +5,20 @@
 #define NM_TO_M 1852
 #define DEG_TO_RAD 0.0174533
 
+
+std::string gCallSingList[10] = { "Maverick",
+                                  "Iceman"  ,
+                                  "Goose"   ,
+                                  "Pappy"   ,
+                                  "Guido"   ,
+                                  "Snoopy"  ,
+                                  "Flash"   ,
+                                  "Dino"    ,
+                                  "Viper"   ,
+                                  "Gadget"};
+
+
+
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
   ui(new Ui::MainWindow)
@@ -360,6 +374,9 @@ void MainWindow::BuildSimTrackTable()
     {
       mSimTable[i].GroundSpeed = ui->sbxSimSpeed->value();
     }
+
+    //
+    mSimTable[i].CallSing = gCallSingList[rand()%10] + "_" + std::to_string(rand()%100);
   }
 }
 
@@ -414,7 +431,7 @@ void MainWindow::PushSimTrackTable()
     mlTrackTable[i].Course  = static_cast<quint16>(mSimTable[i].Course/OBX_TRK_BEARINGCOURSE_LSB);
     mlTrackTable[i].GroundSpeed   = static_cast<quint16>(mSimTable[i].GroundSpeed/OBX_TRK_SPEED_LSB);
     //
-    sprintf(mlTrackTable[i].CallSing,"TOTO");
+    sprintf(mlTrackTable[i].CallSing, mSimTable[i].CallSing.c_str());
   }
 
   mObelixSimThread->PushTracks(mlTrackTable, mSimTableSize);

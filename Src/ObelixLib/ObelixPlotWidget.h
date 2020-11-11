@@ -83,7 +83,7 @@ public:
   inline bool DisplayTracks    () const {return mDisplayTracks;}
   inline bool DisplayAircraft  () const {return mDisplayAircraft;}
   inline bool DisplayHeading   () const {return mDisplayHeading;}
-  inline void SetNorthUp          (bool pEnable) {mNorthUp = pEnable;}
+  inline void SetNorthUp          (bool pEnable) {mNorthUp = pEnable; mNeedToPaintInfo = true;}
   inline void SetDisplayAntenna   (bool pEnable) {mDisplayAntenna = pEnable;}
   inline void SetDisplayRangeLimit(bool pEnable) {mDisplayRangeLimit = pEnable; mNeedToPaintInfo=true;}
   inline void SetDisplayRangeRings(bool pEnable) {mDisplayRangeRings = pEnable; mNeedToPaintInfo=true;}

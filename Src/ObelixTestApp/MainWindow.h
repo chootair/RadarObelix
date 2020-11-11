@@ -10,10 +10,11 @@
 
 typedef struct _T_SimTrack
 {
-  double Bearing;
-  double Distance;
-  double Course;
-  double GroundSpeed;
+  double      Bearing;
+  double      Distance;
+  double      Course;
+  double      GroundSpeed;
+  std::string CallSing;
 }T_SimTrack;
 
 namespace Ui {
