@@ -345,6 +345,29 @@ void ObelixPlotWidget::PaintVideoCells(QPainter *pPainter)
         //
         lBrush.setColor(lWeatherColor);
       }
+      else if (mFifoVideoPtr[i].VideoMode == OBX_VIDEO_TEST)
+      {
+        QColor lTestColor = Qt::black;
+
+        int lCode = mFifoVideoPtr[i].CellValueTbl[lIdxCell-1] % 3;
+
+        if (lCode == 0)
+        {
+          lTestColor = Qt::red;
+        }
+        else if (lCode == 1)
+        {
+          lTestColor = Qt::green;
+        }
+        else
+        {
+          lTestColor = Qt::blue;
+        }
+
+        //
+        lBrush.setColor(lTestColor);
+      }
+
       else
       {
         /// \todo No Brush ?
@@ -416,12 +439,22 @@ void ObelixPlotWidget::PaintTrackPlots(QPainter *pPainter)
     lVectorPt.setX(lTrackPt.x() + static_cast<int>(lTrackSpeedPx*sin(lAzimuthOffsetRad + lTrackCourseRad)));
     lVectorPt.setY(lTrackPt.y() - static_cast<int>(lTrackSpeedPx*cos(lAzimuthOffsetRad + lTrackCourseRad)));
 
+    // Age
+    double lUpdateAgeRto = 100 * (QDateTime::currentSecsSinceEpoch() - lPlotTrack.LastUpdate)/10;
+    int lAgeCount = lUpdateAgeRto /25;
+    QString lAgeString = "";
+    for (int i=0; i<lAgeCount; i++)
+    {
+      lAgeString.append(".");
+    }
+
+
     // Paint
     pPainter->drawRect(lTrackPt.x()-3, lTrackPt.y()-3, 6,6);
     pPainter->drawLine(lTrackPt, lVectorPt);
-    pPainter->drawText(lTrackPt.x()+10, lTrackPt.y()+7,QString("[%1]").arg(lPlotTrack.Track.Id));
+    pPainter->drawText(lTrackPt.x()+10, lTrackPt.y()+7,QString("[%1]%2").arg(lPlotTrack.Track.Id).arg(lAgeString));
     pPainter->drawText(lTrackPt.x()+10, lTrackPt.y()+22,QString("%1°/%2kts").arg(static_cast<int>(lTrackCourseDeg),3,10,QChar('0'))
-                       .arg(static_cast<int>(lTrackSpeedKts),3,10,QChar('0')));
+                                                                            .arg(static_cast<int>(lTrackSpeedKts),3,10,QChar('0')));
     pPainter->drawText(lTrackPt.x()+10, lTrackPt.y()+37,QString("%1").arg(lPlotTrack.Track.CallSing));
   }
 }
@@ -734,6 +767,9 @@ int ObelixPlotWidget::ReadTrackPlots()
 
   // Unlock FIFO
   mFifoObelixTrack.mFifoLocker->unlock();
+
+  // Remove old tracks
+
 
   //
   return 0;

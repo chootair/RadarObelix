@@ -98,6 +98,14 @@ private slots:
 
   void on_cbxPresistanceMode_currentIndexChanged(int index);
 
+  void on_ckxSectorScan_clicked(bool checked);
+
+  void on_sbxSectorScanAzimuth_valueChanged(double arg1);
+
+  void on_sbxSectorScanWitdh_valueChanged(double arg1);
+
+  void on_ckxSectorScanPlatform_clicked(bool checked);
+
 private:
   void BuildSimTrackTable();
   void PushSimTrackTable();

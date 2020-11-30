@@ -1,3 +1,14 @@
+//----------------------------------------------------------------------------//
+//--                              Radar OBELIX                              --//
+//----------------------------------------------------------------------------//
+/// \file    ObelixPlotWidget.h
+/// \brief   Heder file for the ::ObelixPlotWidget class
+/// ---------------------------------------------------------------------------
+/// \version 1.0
+/// \author  Guillaume.C
+/// \date    01/04/2020
+/// \note    Creation for initial version
+//----------------------------------------------------------------------------//
 #ifndef OBELIXPLOTWIDGET_H
 #define OBELIXPLOTWIDGET_H
 
@@ -14,26 +25,28 @@
 #include "PresistImage.h"
 
 
+/// \brief FIFO handler
 typedef struct _T_FifoHandler
 {
-  uint*           mFifoIndexPtr;
-  uint            mFifoSize;
-  uint            mMessageSize;
-  char*           mFifoPtr;
-  QReadWriteLock* mFifoLocker;
+  uint*           mFifoIndexPtr; ///< Index pointer
+  uint            mFifoSize;     ///< Size
+  uint            mMessageSize;  ///< Message size
+  char*           mFifoPtr;      ///< FIFO pointer
+  QReadWriteLock* mFifoLocker;   ///< FIFO locker
 }T_FifoHandler;
 
-
+/// \brief Plot track
 typedef struct _T_PlotTrack
 {
   T_ObelixTrack Track;
   qint64        LastUpdate;
 }T_PlotTrack;
 
+/// \brief Persistant mode
 typedef enum _T_PersistMode
 {
-  PersistComposition = 0,
-  PersistPixel
+  PersistComposition = 0, ///< Image composition
+  PersistPixel            ///< Pixel computation
 }T_PersistMode;
 
 
@@ -44,6 +57,8 @@ class OBELIXLIBSHARED_EXPORT ObelixPlotWidget : public QOpenGLWidget
 public:
   explicit ObelixPlotWidget(QWidget *parent = nullptr);
   ~ObelixPlotWidget();
+
+  ///
   void RefreshScope();
   void ClearScope();
 
@@ -53,20 +68,21 @@ public:
   void SetPersistenceMode(T_PersistMode pPersistMode) {mPersistMode = pPersistMode;}
   inline T_PersistMode PersistenceMode() const { return mPersistMode;}
 
-
   inline double RangeNm() const {return mRangeNm;}
-   inline void SetRangeNm(double pRangeNm) {mRangeNm = pRangeNm;}
+  inline void SetRangeNm(double pRangeNm) {mRangeNm = pRangeNm;}
 
 
 
-
-  inline qint64 ElapsedAverageTimeMs() const {return mElapsedAverageTimeMs;}
   //
   inline uint   FifoObelixVideoLoad() const {return mFifoObelixVideoLoad;}
   inline T_FifoHandler   FifoObelixVideo() {return mFifoObelixVideo;}
   //
   inline uint   FifoObelixTrackLoad() const {return mFifoObelixTrackLoad;}
   inline T_FifoHandler   FifoObelixTrack() {return mFifoObelixTrack;}
+
+
+
+  inline qint64 ElapsedAverageTimeMs() const {return mElapsedAverageTimeMs;}
 
 
   //

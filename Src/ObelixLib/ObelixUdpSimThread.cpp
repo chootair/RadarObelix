@@ -13,6 +13,12 @@ ObelixUdpSimThread::ObelixUdpSimThread()
   mVideoIntensity          = 1;
   mVideoNoise              = 0;
   mVideoMode = OBX_VIDEO_SEARCH;
+  mAntennaInverseRotate    = false;
+  mAntennaInverseCurrentRotate    = false;
+  mSectorScan              = false;
+  mSectorPlatfromRef       = false;
+  mSectorScanAzimuthDeg     = 0;
+  mSectorScanWidthDeg      = 40;
 
   //
   mObelixUdpGene = nullptr;
@@ -154,13 +160,46 @@ void ObelixUdpSimThread::OnTimerTick()
     // Send video beam
     mObelixUdpGene->SendVideoBeam(mPlatformHeading, mAntennaPos,mBeamWidth,0,mRange,mVideoMode);
 
-    // Update antenna position
-    mAntennaPos += mBeamWidth;
+    double lLastAntennaPos = mAntennaPos;
+
+    // Update antenna position according rotation way
+    if (mAntennaInverseCurrentRotate == false)
+    {
+      mAntennaPos += mBeamWidth;
+    }
+    else
+    {
+      mAntennaPos -= mBeamWidth;
+    }
 
     // Lap correction
-    if (mAntennaPos >= 360)
+    auto lapCorrection = [](double lAngle) -> double {return lAngle >= 360 ? (lAngle-360) : (lAngle <0 ? (lAngle+360) : (lAngle)); };
+
+    // Lap correction
+    mAntennaPos = lapCorrection(mAntennaPos);
+
+    // Sector scan?
+    if (mSectorScan == true)
     {
-      mAntennaPos = mAntennaPos-360;
+      double lSectorScanAzimutOffet = mSectorScanAzimuthDeg + (mSectorPlatfromRef ? mPlatformHeading : 0);
+      double lForwardStop = lapCorrection(lSectorScanAzimutOffet + 0.5*mSectorScanWidthDeg);
+      double lRewindStop  = lapCorrection(lSectorScanAzimutOffet - 0.5*mSectorScanWidthDeg);
+
+      // Forward way
+      if ((mAntennaInverseCurrentRotate == false       ) &&
+          (lLastAntennaPos              <= lForwardStop) &&
+          (mAntennaPos                  >= lForwardStop))
+      {
+        mAntennaInverseCurrentRotate = true;
+      }
+
+      // Reverse way
+      if((mAntennaInverseCurrentRotate == true       ) &&
+         (lLastAntennaPos              >= lRewindStop) &&
+         (mAntennaPos                  <= lRewindStop))
+      {
+        mAntennaInverseCurrentRotate = false;
+      }
     }
   }
 

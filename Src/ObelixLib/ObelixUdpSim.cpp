@@ -222,7 +222,14 @@ void ObelixUdpSim::BuildVideoBeam(double pHeading, double pStartAzimut, double p
         // Random mode
         else if (pVideoMode == OBX_VIDEO_TEST)
         {
-          mBeam[lIdxBeam].CellValueTbl[lIdxCell]=rand()%255;
+          if (lIdxCell == 0)
+          {
+            mBeam[lIdxBeam].CellValueTbl[0]=lIdxBeam%255;
+          }
+          else
+          {
+            mBeam[lIdxBeam].CellValueTbl[lIdxCell]=mBeam[lIdxBeam].CellValueTbl[0];
+          }
         }
       }
 

@@ -37,6 +37,12 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->sbxSimNoise->setValue(mObelixSimThread->VideoNoise());
   ui->sbxPlatformHeading->setValue(mObelixSimThread->PlatformHeading());
 
+  ui->ckxSectorScan->setChecked(mObelixSimThread->SectorScan());
+  ui->ckxSectorScanPlatform->setChecked(mObelixSimThread->SectorScanPlatformRef());
+  ui->sbxSectorScanWitdh->setValue(mObelixSimThread->SectorScanWidth());
+  ui->sbxSectorScanAzimuth->setValue(mObelixSimThread->SectorScanAzimuth());
+
+
   // DISPLAY
   ui->sbxScopeDisplayRange->setValue(ui->olxPlot->RangeNm());
   ui->sbxDisplayPxKtsRatio->setValue(ui->olxPlot->DisplayPxKtsRatio());
@@ -466,3 +472,24 @@ void MainWindow::on_pbxStopSim_clicked()
 
 
 
+
+void MainWindow::on_ckxSectorScan_clicked(bool checked)
+{
+    mObelixSimThread->SetSectorScan(checked);
+}
+
+void MainWindow::on_sbxSectorScanAzimuth_valueChanged(double arg1)
+{
+    mObelixSimThread->SetSectorScanAzimuth(arg1);
+}
+
+
+void MainWindow::on_sbxSectorScanWitdh_valueChanged(double arg1)
+{
+    mObelixSimThread->SetSectorScanWidth(arg1);
+}
+
+void MainWindow::on_ckxSectorScanPlatform_clicked(bool checked)
+{
+    mObelixSimThread->SetSectorScanPlatformRef(checked);
+}

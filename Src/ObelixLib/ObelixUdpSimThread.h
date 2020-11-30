@@ -28,6 +28,20 @@ public:
     inline double BeamWidth() const {return mBeamWidth;}
 
 
+
+    inline bool   SectorScan           () const{return mSectorScan;}
+    inline bool   SectorScanPlatformRef() const{return mSectorPlatfromRef;}
+    inline double SectorScanAzimuth     () const{return mSectorScanAzimuthDeg;}
+    inline double SectorScanWidth      () const{return mSectorScanWidthDeg;}
+
+    inline void SetSectorScan           (bool   pSectorScan)          {mSectorScan = pSectorScan;}
+    inline void SetSectorScanPlatformRef(bool   pSectorPlatfromRef)   {mSectorPlatfromRef = pSectorPlatfromRef;}
+    inline void SetSectorScanAzimuth     (double pSectorScanAzimuthDeg) {mSectorScanAzimuthDeg = pSectorScanAzimuthDeg;}
+    inline void SetSectorScanWidth      (double pSectorScanWidthDeg)  {mSectorScanWidthDeg = pSectorScanWidthDeg;}
+
+
+
+
     inline void SetRange(double pRange) {mRange = pRange;}
     inline double Range() const {return mRange;}
 
@@ -38,6 +52,8 @@ public:
     inline void SetPlatformHeading(double_t pVal) {mPlatformHeading = pVal;}
     inline double PlatformHeading() const {return mPlatformHeading;}
 
+    inline void SetAntennaInverseRotate(bool pVal) {mAntennaInverseRotate = pVal;}
+    inline bool AntennaInverseRotate() const {return mAntennaInverseRotate;}
 
 
     void SetVideoIntensity(double pVal);
@@ -97,6 +113,15 @@ private:
   double mRange;
 
   double mPlatformHeading;
+
+  bool mAntennaInverseRotate;
+  bool mAntennaInverseCurrentRotate;
+
+  bool mSectorScan;
+  bool mSectorPlatfromRef;
+  double mSectorScanAzimuthDeg;
+  double mSectorScanWidthDeg;
+
 
 };
 
