@@ -160,6 +160,12 @@ void ObelixPlotWidget::SetPresistenceRatio(double pRatio)
   mPersistMultiplyColor.setRgb(240*pRatio,240*pRatio,240*pRatio);
 }
 
+void ObelixPlotWidget::SetRangeNm(double pRangeNm)
+{
+  mRangeNm = qMax(pRangeNm, 1.0);
+}
+
+
 void ObelixPlotWidget::resizeEvent(QResizeEvent *event)
 {
   Q_UNUSED(event);
@@ -523,8 +529,11 @@ void ObelixPlotWidget::PaintTools(QPainter *pPainter)
   {
     pPainter->setPen(mColorRangeRings);
 
-    // Ring space auto
+    // Ring space auto 30%
     int lRangeRingSpace = static_cast<int>(10*floor(mRangeNm/30.0));
+
+    // Min 1 Nm
+    lRangeRingSpace = qMax(lRangeRingSpace, 1);
 
     // Loop on range rings
     for (int lRangeRingDst=lRangeRingSpace; lRangeRingDst<mRangeNm; lRangeRingDst += lRangeRingSpace)

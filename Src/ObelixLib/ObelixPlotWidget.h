@@ -69,8 +69,7 @@ public:
   inline T_PersistMode PersistenceMode() const { return mPersistMode;}
 
   inline double RangeNm() const {return mRangeNm;}
-  inline void SetRangeNm(double pRangeNm) {mRangeNm = pRangeNm;}
-
+  void SetRangeNm(double pRangeNm);
 
 
   //
