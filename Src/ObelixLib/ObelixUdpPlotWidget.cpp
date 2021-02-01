@@ -19,8 +19,12 @@ ObelixUdpPlotWidget::ObelixUdpPlotWidget(QWidget *parent) : ObelixPlotWidget(par
                                           this->FifoObelixTrack().mMessageSize,
                                           this->FifoObelixTrack().mFifoLocker);
 
-
-
+  mObelixUdpReaderMap = new ObelixUdpReaderThread();
+  mObelixUdpReaderMap->SetFifoParameter(this->FifoObelixMap().mFifoPtr,
+                                        this->FifoObelixMap().mFifoIndexPtr,
+                                        this->FifoObelixMap().mFifoSize,
+                                        this->FifoObelixMap().mMessageSize,
+                                        this->FifoObelixMap().mFifoLocker);
 
 
   mTimer = new QTimer(this);
@@ -34,6 +38,7 @@ ObelixUdpPlotWidget::~ObelixUdpPlotWidget()
   delete mTimer;
   delete mObelixUdpReaderTrack;
   delete mObelixUdpReaderVideo;
+  delete mObelixUdpReaderMap;
 }
 
 void ObelixUdpPlotWidget::SetUdpReaderVideoParameters(QString pIp, uint pPort)
@@ -46,10 +51,16 @@ void ObelixUdpPlotWidget::SetUdpReaderTrackParameters(QString pIp, uint pPort)
   mObelixUdpReaderTrack->SetConnexionParameters(pIp, pPort);
 }
 
+void ObelixUdpPlotWidget::SetUdpReaderMapParameters(QString pIp, uint pPort)
+{
+  mObelixUdpReaderMap->SetConnexionParameters(pIp, pPort);
+}
+
 void ObelixUdpPlotWidget::Start(int pRefershPeriodMsec)
 {
   mObelixUdpReaderVideo->start();
   mObelixUdpReaderTrack->start();
+  mObelixUdpReaderMap->start();
   if (pRefershPeriodMsec > 0)
   {
     mTimer->start(pRefershPeriodMsec);
@@ -60,6 +71,7 @@ void ObelixUdpPlotWidget::Stop()
 {
   mObelixUdpReaderVideo->AskForStop();
   mObelixUdpReaderTrack->AskForStop();
+  mObelixUdpReaderMap->AskForStop();
   mTimer->stop();
 }
 

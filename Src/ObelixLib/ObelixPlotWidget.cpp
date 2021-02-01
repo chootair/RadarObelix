@@ -3,7 +3,64 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-static const double DEG_TO_RAD = M_PI/180;
+static const double DEG_TO_RAD     = M_PI/180;
+static const double EARTH_RADIUS_M = 6378137;
+static const double NM_TO_M        = 1852;
+
+auto LonToX = [](double lon)->double {return EARTH_RADIUS_M *  DEG_TO_RAD * lon;};
+auto LatToY = [](double lat)->double {return EARTH_RADIUS_M *  DEG_TO_RAD * lat;};
+auto XToLon = [](double x)->double {return x / (EARTH_RADIUS_M *  DEG_TO_RAD);};
+auto YToLat = [](double y)->double {return y / (EARTH_RADIUS_M *  DEG_TO_RAD);};
+
+
+void ComputeAzimuthDistance(double pLatA, double pLongA,
+                            double pLatB, double pLongB,
+                            double& pAzimuth, double& pDistance)
+{
+  double lXA = LonToX(pLongA);
+  double lYA = LatToY(pLatA);
+  //
+  double lXB = LonToX(pLongB);
+  double lYB = LatToY(pLatB);
+
+  //
+  pDistance = sqrt((lYB-lYA)*(lYB-lYA) + (lXB-lXA)*(lXB-lXA));
+
+  /// \todo Improuve
+  if (fabs(lYB-lYA) < 1)
+  {
+    pAzimuth = 0;
+  }
+  else if (fabs(lYB-lYA) < 1)
+  {
+    pAzimuth = 0;
+  }
+
+  pAzimuth = atan2((lXB-lXA),(lYB-lYA))/DEG_TO_RAD;
+
+
+  // Negative correction
+  if (pAzimuth < 0)
+  {
+    pAzimuth = 360 + pAzimuth;
+  }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ObelixPlotWidget::ObelixPlotWidget(QWidget *parent) : QOpenGLWidget(parent)
 {
@@ -31,6 +88,17 @@ ObelixPlotWidget::ObelixPlotWidget(QWidget *parent) : QOpenGLWidget(parent)
   //
   mFifoTrackPtr = (T_ObelixTrackReportMessage*)(mFifoObelixTrack.mFifoPtr);
 
+  //
+  mFifoObelixMapLoad = 0;
+  mFifoObelixMap.mFifoIndexPtr    = new uint;
+  *(mFifoObelixMap.mFifoIndexPtr) = 0;
+  mFifoObelixMap.mMessageSize     = sizeof(T_ObelixMapMessage);
+  mFifoObelixMap.mFifoSize        = 1024;
+  mFifoObelixMap.mFifoPtr         = (char*)calloc(mFifoObelixMap.mFifoSize, sizeof(T_ObelixMapMessage));
+  mFifoObelixMap.mFifoLocker      = new QReadWriteLock();
+  //
+  mFifoMapPtr = (T_ObelixMapMessage*)(mFifoObelixMap.mFifoPtr);
+
 
   mTrackTable.clear();
 
@@ -42,6 +110,7 @@ ObelixPlotWidget::ObelixPlotWidget(QWidget *parent) : QOpenGLWidget(parent)
   mScopeVideoImg = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
   mScopeTrackImg = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
   mToolsImg      = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
+  mMapImg        = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
   mHeadingImg    = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
   mWidgetImg     = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
 
@@ -93,7 +162,7 @@ ObelixPlotWidget::ObelixPlotWidget(QWidget *parent) : QOpenGLWidget(parent)
   mColorCompas     = Qt::green;
   mColorVideo      = Qt::green;
   mColorTracks     = Qt::white;
-  mColorAircraft   = Qt::green;
+  mColorAircraft   = Qt::yellow;
   mColorHeading    = Qt::red;
 
 
@@ -111,6 +180,10 @@ ObelixPlotWidget::~ObelixPlotWidget()
   delete mFifoObelixTrack.mFifoLocker;
   delete mFifoObelixTrack.mFifoIndexPtr;
   free(mFifoObelixTrack.mFifoPtr);
+  //
+  delete mFifoObelixMap.mFifoLocker;
+  delete mFifoObelixMap.mFifoIndexPtr;
+  free(mFifoObelixMap.mFifoPtr);
 }
 
 void ObelixPlotWidget::RefreshScope()
@@ -119,6 +192,9 @@ void ObelixPlotWidget::RefreshScope()
   
   //
   ReadTrackPlots();
+
+  //
+  ReadMapPlots();
 
   //
   PaintControl();
@@ -144,6 +220,7 @@ void ObelixPlotWidget::ClearScope()
   mScopeTrackImg->fill(0x00000000);
   mHeadingImg->fill(0x00000000);
   mToolsImg->fill(0x00000000);
+  mMapImg->fill(0x00000000);
   mPersistImg->fill(0xFF000000);
 
   //
@@ -195,6 +272,9 @@ void ObelixPlotWidget::SetMyGeometry()
   delete mToolsImg;
   mToolsImg = new QImage(width(), height(), QImage::Format_ARGB32_Premultiplied);
   //
+  delete mMapImg;
+  mMapImg = new QImage(width(), height(), QImage::Format_ARGB32_Premultiplied);
+  //
   delete mScopeTrackImg;
   mScopeTrackImg = new QImage(width(), height(), QImage::Format_ARGB32_Premultiplied);
 
@@ -204,6 +284,7 @@ void ObelixPlotWidget::SetMyGeometry()
   mScopeTrackImg->fill(0x00000000);
   mHeadingImg->fill(0x00000000);
   mToolsImg->fill(0x00000000);
+  mMapImg->fill(0x00000000);
 
   //
   mNeedToPaintInfo=true;
@@ -440,7 +521,7 @@ void ObelixPlotWidget::PaintTrackPlots(QPainter *pPainter)
     lVectorPt.setY(lTrackPt.y() - static_cast<int>(lTrackSpeedPx*cos(lAzimuthOffsetRad + lTrackCourseRad)));
 
     // Age
-    double lUpdateAgeRto = 100 * (QDateTime::currentSecsSinceEpoch() - lPlotTrack.LastUpdate)/10;
+    double lUpdateAgeRto = 100 * (QDateTime::currentMSecsSinceEpoch() - lPlotTrack.LastUpdate)/10000;
     int lAgeCount = lUpdateAgeRto /25;
     QString lAgeString = "";
     for (int i=0; i<lAgeCount; i++)
@@ -481,28 +562,13 @@ void ObelixPlotWidget::PaintHeadingFeatures(QPainter *pPainter)
     if (mDisplayAircraft == true)
     {
         int lAftB = 6;
-        int lAftW = 20;
-        int lAftH = 10;
+        int lAftWidth = 15;
+        int lAftHeight = 10;
 
-
-        static const QPointF aircraft[13] = {
-            QPointF(0, -20),
-            QPointF(lAftB, -5),
-            QPointF(lAftW, 0),
-            QPointF(lAftW, 5),
-            QPointF(lAftB, 2),
-            QPointF(lAftB-2, 10),
-            QPointF(lAftB+4, 15),
-            QPointF(-(lAftB+4), 15),
-            QPointF(-(lAftB-2), 10),
-            QPointF(-lAftB, 2),
-            QPointF(-lAftW, 5),
-            QPointF(-lAftW, 0),
-            QPointF(-lAftB, -5),
-        };
-
-        pPainter->setPen(mColorAircraft);
-        pPainter->drawPolygon(aircraft,13);
+        pPainter->setPen(QPen(mColorAircraft,2));
+        pPainter->drawLine(0,-10,0,15);
+        pPainter->drawLine(-lAftWidth,0,lAftWidth,0);
+        pPainter->drawLine(-5,10,5,10);
     }
 }
 
@@ -525,6 +591,9 @@ void ObelixPlotWidget::PaintTools(QPainter *pPainter)
 
     // Ring space auto
     int lRangeRingSpace = static_cast<int>(10*floor(mRangeNm/30.0));
+
+    //
+    lRangeRingSpace = qMax(lRangeRingSpace, 1);
 
     // Loop on range rings
     for (int lRangeRingDst=lRangeRingSpace; lRangeRingDst<mRangeNm; lRangeRingDst += lRangeRingSpace)
@@ -609,6 +678,90 @@ void ObelixPlotWidget::PaintTools(QPainter *pPainter)
 
     }
   }
+}
+
+void ObelixPlotWidget::PaintMap(QPainter *pPainter)
+{
+  // Translate painter
+  //pPainter->translate(mXCtr,mYCtr);
+
+  double lAzimuthOffsetRad = 0;
+
+
+  // Heading Up
+  if (mNorthUp == false)
+  {
+    lAzimuthOffsetRad = -mLastHeadingDeg*DEG_TO_RAD;
+  }
+
+
+  pPainter->setPen(Qt::cyan);
+
+  // Platform position
+  double lPlatformX = LonToX(mLastMapPlatformLongitude);
+  double lPlatformY = LatToY(mLastMapPlatformLatitude);
+
+  // Loop on plot track
+  foreach (T_PlotMap lPlotMap, mMapTable)
+  {
+    QPolygon polygon;
+
+    foreach (T_ObelixMapPoint lPlotPoint, lPlotMap.Points)
+    {
+      double lPixelRatio = mPlotRad/(mRangeNm*NM_TO_M);
+      double lPtLat  = static_cast<double>(lPlotPoint.Latitude)  * OBX_TRK_LATLONG_LSB;
+      double lPtLong = static_cast<double>(lPlotPoint.Longitude) * OBX_TRK_LATLONG_LSB;
+
+      double lPtX =   (LonToX(lPtLong) - lPlatformX) * lPixelRatio;
+      double lPtY =  -(LatToY(lPtLat)  - lPlatformY) * lPixelRatio;
+
+
+      double lPtAz = 0;
+      double lPtDist = 0;
+
+
+      ComputeAzimuthDistance(mLastMapPlatformLatitude, mLastMapPlatformLongitude, lPtLat, lPtLong, lPtAz, lPtDist);
+
+
+      lPtDist = lPtDist * lPixelRatio;
+      lPtAz   = lPtAz * DEG_TO_RAD;
+
+      // Track Position
+      //double lTrackRangePx    = mPlotRad/mRangeNm*lPlotTrack.Track.Distance*OBX_TRK_DISTANCE_LSB;
+      //double lTrackBreaingRad = static_cast<double>(lPlotTrack.Track.Bearing)*OBX_TRK_BEARINGCOURSE_LSB*DEG_TO_RAD;
+      //
+      lPtX = width()/2  + static_cast<int>(lPtDist * sin(lAzimuthOffsetRad + lPtAz));
+      lPtY = height()/2 - static_cast<int>(lPtDist * cos(lAzimuthOffsetRad + lPtAz));
+
+
+
+
+      polygon.append(QPoint(lPtX, lPtY));
+
+
+      //
+      {
+      QSize        sz_l;
+      QFontMetrics ft_metrics_l (this->font());
+      QString lText = QString(lPlotPoint.Label);
+
+
+      //
+      sz_l = ft_metrics_l.size(Qt::TextSingleLine, lText);
+      int lTextRad = 30;
+
+      pPainter->drawText( lPtX - 0.5*sz_l.width(),
+                          lPtY + 0.7*sz_l.height(),lText);// ,Qt::AlignVCenter,sz_l.width(),sz_l.height(),lText);
+      }
+
+
+
+
+    }
+
+    pPainter->drawPolygon(polygon);
+  }
+
 }
 
 
@@ -697,6 +850,15 @@ void ObelixPlotWidget::PaintControl()
   }
   lWidgetPainter.drawImage(0, 0, *mToolsImg);
 
+
+  // Map
+  {
+    QPainter lMapPainter(mMapImg);
+    mMapImg->fill(0x00000000);
+    PaintMap(&lMapPainter);
+    lWidgetPainter.drawImage(0, 0, *mMapImg);
+  }
+
   // Paint heading
   if ((mDisplayAircraft == true) || (mDisplayHeading == true))
   {
@@ -727,6 +889,78 @@ void ObelixPlotWidget::PaintControl()
 }
 
 
+int ObelixPlotWidget::ReadMapPlots()
+{
+  // Lock FIFO
+  mFifoObelixMap.mFifoLocker->lockForWrite();
+
+  // FIFO load
+  mFifoObelixMapLoad = *(mFifoObelixMap.mFifoIndexPtr)/(float)mFifoObelixMap.mFifoSize*100.0;
+
+
+  //qDebug("ReadMapPlots %i", *(mFifoObelixMap.mFifoIndexPtr));
+
+  // Loop on message
+  for (uint i=0; i<(*(mFifoObelixMap.mFifoIndexPtr)); i++)
+  {
+    // Known element ?
+    if (mMapTable.contains(mFifoMapPtr[i].ElementId) == true)
+    {
+      // Append
+      if (mFifoMapPtr[i].OperationType == OBX_MAP_APPEND)
+      {
+        mMapTable[mFifoMapPtr[i].ElementId].Count += mFifoMapPtr[i].PointCount;
+
+        //
+        for (int idxPt=0; idxPt<mFifoMapPtr[i].PointCount; idxPt++)
+        {
+          mMapTable[mFifoMapPtr[i].ElementId].Points.append(mFifoMapPtr[i].PointTbl[idxPt]);
+        }
+      }
+      // Delete
+      else if (mFifoMapPtr[i].OperationType == OBX_MAP_DELETE)
+      {
+        mMapTable.remove(mFifoMapPtr[i].ElementId);
+      }
+    }
+    else
+    {
+      // Add new element
+      if ((mFifoMapPtr[i].OperationType == OBX_MAP_APPEND) ||
+          (mFifoMapPtr[i].OperationType == OBX_MAP_UPDATE))
+      {
+        T_PlotMap lNewMapElement;
+
+        //
+        lNewMapElement.Type  = mFifoMapPtr[i].ElementType;
+        lNewMapElement.Count = mFifoMapPtr[i].PointCount;
+
+        //
+        for (int idxPt=0; idxPt<mFifoMapPtr[i].PointCount; idxPt++)
+        {
+          lNewMapElement.Points.append(mFifoMapPtr[i].PointTbl[idxPt]);
+        }
+
+        // Add to map
+        mMapTable[mFifoMapPtr[i].ElementId] = lNewMapElement;
+      }
+    }
+
+    // Last platfrom position
+    mLastMapPlatformLatitude  = static_cast<double>(mFifoMapPtr[i].PlatformLatitude) * OBX_TRK_LATLONG_LSB;
+    mLastMapPlatformLongitude = static_cast<double>(mFifoMapPtr[i].PlatformLongitude)* OBX_TRK_LATLONG_LSB;
+    mLastMapPlatformHeading   = static_cast<double>(mFifoMapPtr[i].PlatformHeading)  * OBX_TRK_BEARINGCOURSE_LSB;
+  }
+
+  // Reset index
+  *(mFifoObelixMap.mFifoIndexPtr) = 0;
+
+  // Unlock FIFO
+  mFifoObelixMap.mFifoLocker->unlock();
+
+  //
+  return 0;
+}
 
 
 int ObelixPlotWidget::ReadTrackPlots()
@@ -747,7 +981,7 @@ int ObelixPlotWidget::ReadTrackPlots()
       if (mTrackTable.contains(mFifoTrackPtr[i].TrackTbl[j].Id) == true)
       {
         mTrackTable[mFifoTrackPtr[i].TrackTbl[j].Id].Track      = mFifoTrackPtr[i].TrackTbl[j];
-        mTrackTable[mFifoTrackPtr[i].TrackTbl[j].Id].LastUpdate = QDateTime::currentSecsSinceEpoch();
+        mTrackTable[mFifoTrackPtr[i].TrackTbl[j].Id].LastUpdate = QDateTime::currentMSecsSinceEpoch();
       }
       // Add
       else
@@ -755,7 +989,7 @@ int ObelixPlotWidget::ReadTrackPlots()
         T_PlotTrack lNewTrack;
         //
         lNewTrack.Track      = mFifoTrackPtr[i].TrackTbl[j];
-        lNewTrack.LastUpdate = QDateTime::currentSecsSinceEpoch();
+        lNewTrack.LastUpdate = QDateTime::currentMSecsSinceEpoch();
         //
         mTrackTable.insert(lNewTrack.Track.Id, lNewTrack);
       }
