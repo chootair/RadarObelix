@@ -109,7 +109,6 @@ private slots:
 private:
   void BuildSimTrackTable();
   void PushSimTrackTable();
-  void PushSimMapTable();
 private:
   Ui::MainWindow *ui;
 

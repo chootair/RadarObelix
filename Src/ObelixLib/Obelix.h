@@ -83,44 +83,5 @@ typedef struct _T_ObelixTrackReportMessage
 }T_ObelixTrackReportMessage;
 
 
-typedef struct _T_ObelixMapPoint
-{
-  int32_t Latitude;  ///< Latitude  [°]
-  int32_t Longitude; ///< Longitude [°]
-  char    Label[8];  ///< Label
-}T_ObelixMapPoint;
-
-
-static const uint16_t OBX_MAP_POLY   = 0;
-static const uint16_t OBX_MAP_WAY    = 1;
-static const uint16_t OBX_MAP_SINGLE = 2;
-
-static const uint16_t OBX_MAP_APPEND = 0;
-static const uint16_t OBX_MAP_UPDATE = 1;
-static const uint16_t OBX_MAP_DELETE = 2;
-
-static const uint16_t OBX_MAP_TBL_CNT = 20;
-
-
-typedef struct _T_ObelixMapMessage
-{
-  uint16_t Number;                    ///< Message number
-  uint16_t PointCount;                ///< Number of points in the message
-  uint16_t ElementId;
-  uint8_t  ElementType;
-  uint8_t  OperationType;
-
-  // Platfrom position
-  int32_t  PlatformLatitude;  ///< Platfrom latitude  [°]
-  int32_t  PlatformLongitude; ///< Platfrom longitude [°]
-  uint16_t PlatformHeading;   ///< Platform heading [°]
-  uint16_t Dummy;
-
-  //
-  T_ObelixMapPoint PointTbl[OBX_MAP_TBL_CNT]; ///< Point table
-}T_ObelixMapMessage;
-
-
-
 
 #endif // OBELIX_H
