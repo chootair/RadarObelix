@@ -1,6 +1,8 @@
 #ifndef OBELIXUDPSIM_H
 #define OBELIXUDPSIM_H
 
+#include <math.h>
+
 #include <QObject>
 #include <QUdpSocket>
 

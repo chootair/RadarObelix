@@ -14,6 +14,7 @@ public:
   ~ObelixUdpPlotWidget();
   void SetUdpReaderVideoParameters(QString pIp, uint pPort);
   void SetUdpReaderTrackParameters(QString pIp, uint pPort);
+  void SetUdpReaderMapParameters  (QString pIp, uint pPort);
   void Start(int pRefershPeriodMsec = 50);
   void Stop();
 
@@ -26,6 +27,7 @@ private:
   //
   ObelixUdpReaderThread* mObelixUdpReaderVideo;
   ObelixUdpReaderThread* mObelixUdpReaderTrack;
+  ObelixUdpReaderThread* mObelixUdpReaderMap;
 };
 
 #endif // OBELIXUDPPLOTWIDGET_H

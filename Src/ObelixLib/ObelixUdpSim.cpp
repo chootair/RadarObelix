@@ -111,15 +111,12 @@ void ObelixUdpSim::SendTrackTable()
   // Loop on the track table
   for (lTrackIter = mTrackTbl->begin(); lTrackIter != mTrackTbl->end(); ++lTrackIter)
   {
-    // Track index
-    i++;
-
     // Add track to reprort message
      lTrackReport.TrackTbl[lTrackReport.TrackCount] = lTrackIter.value();
      lTrackReport.TrackCount++;
 
      // Message full or end of table?
-     if ((lTrackReport.TrackCount >= OBX_TRK_TBL_CNT) || (i >= mTrackTbl->count()))
+     if ((lTrackReport.TrackCount >= OBX_TRK_TBL_CNT) || (lTrackIter == mTrackTbl->end()))
      {
        // Write message datagram
        lWriteSz = mTrackUdpSocket->writeDatagram((char*)&(lTrackReport),sizeof(T_ObelixTrackReportMessage), mTrackIp, mTrackPort);
