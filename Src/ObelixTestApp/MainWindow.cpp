@@ -4,6 +4,13 @@
 #define KNOT_TO_MS 0.514444
 #define NM_TO_M 1852
 #define DEG_TO_RAD 0.0174533
+#define EARTH_RADIUS_M 6378137
+
+
+auto LonToX = [](double lon)->double {return EARTH_RADIUS_M *  DEG_TO_RAD * lon;};
+auto LatToY = [](double lat)->double {return EARTH_RADIUS_M *  DEG_TO_RAD * lat;};
+auto XToLon = [](double x)->double {return x / (EARTH_RADIUS_M *  DEG_TO_RAD);};
+auto YToLat = [](double y)->double {return y / (EARTH_RADIUS_M *  DEG_TO_RAD);};
 
 
 std::string gCallSingList[10] = { "Maverick",
@@ -67,6 +74,9 @@ MainWindow::MainWindow(QWidget *parent) :
   connect(mSimTimer,&QTimer::timeout,this,&MainWindow::OnSimTimerTick);
 
 
+  mSimTable = nullptr;
+
+
   BuildSimTrackTable();
 
 
@@ -88,6 +98,10 @@ MainWindow::MainWindow(QWidget *parent) :
   connect(ui->pbxColorVideo, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
  connect(ui->pbxColorAircraft, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
  connect(ui->pbxColorHeading, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
+
+
+ ui->sbxPlatformLat->setValue(40);
+ ui->sbxPlatformLong->setValue(-1);
 
 
 
@@ -153,6 +167,7 @@ void MainWindow::on_pbxRunPlot_clicked()
   //
   ui->olxPlot->SetUdpReaderVideoParameters(ui->tbxIpVideo->text(), ui->sbxPortVideo->value());
   ui->olxPlot->SetUdpReaderTrackParameters(ui->tbxIpTrack->text(), ui->sbxPortTrack->value());
+  ui->olxPlot->SetUdpReaderMapParameters  (ui->tbxIpMap->text()  , ui->sbxPortMap->value());
 
   // Run
   ui->olxPlot->Start(ui->sbxPlotTimer->value());
@@ -163,6 +178,7 @@ void MainWindow::OnTimerTick()
 {
   ui->pgxFifoLoad->setValue(ui->olxPlot->FifoObelixVideoLoad());
   ui->pgxFifoTrackLoad->setValue(ui->olxPlot->FifoObelixTrackLoad());
+  ui->pgxFifoMapLoad->setValue(ui->olxPlot->FifoObelixMapLoad());
   ui->tbxAverageTime->setText(QString("%1").arg(ui->olxPlot->ElapsedAverageTimeMs()));
 
 
@@ -178,6 +194,7 @@ void MainWindow::OnTimerTick()
 void MainWindow::OnSimTimerTick()
 {
   PushSimTrackTable();
+  PushSimMapTable();
 }
 
 void MainWindow::on_sbxAnntenaSped_valueChanged(int arg1)
@@ -382,7 +399,7 @@ void MainWindow::BuildSimTrackTable()
     }
 
     //
-    mSimTable[i].CallSing = gCallSingList[rand()%10] + "_" + std::to_string(rand()%100);
+    //mSimTable[i].CallSing = gCallSingList[rand()%10] + "_" + std::to_string(rand()%100);
   }
 }
 
@@ -441,6 +458,86 @@ void MainWindow::PushSimTrackTable()
   }
 
   mObelixSimThread->PushTracks(mlTrackTable, mSimTableSize);
+}
+
+void MainWindow::PushSimMapTable()
+{
+  QUdpSocket mapUdpSocket;
+
+  T_ObelixMapMessage mapMessage;
+
+
+  mapMessage.ElementId = 0;
+  mapMessage.ElementType = OBX_MAP_SINGLE;
+  mapMessage.OperationType = OBX_MAP_UPDATE;
+  mapMessage.Number = 0;
+  mapMessage.PlatformLatitude  = ui->sbxPlatformLat->value()/OBX_TRK_LATLONG_LSB;
+  mapMessage.PlatformLongitude = ui->sbxPlatformLong->value()/OBX_TRK_LATLONG_LSB;
+  mapMessage.PointCount = 4;
+
+
+  // N
+  mapMessage.PointTbl[0].Latitude  = (41)/OBX_TRK_LATLONG_LSB;
+  mapMessage.PointTbl[0].Longitude = (-1)/OBX_TRK_LATLONG_LSB;
+  sprintf(mapMessage.PointTbl[0].Label, "N");
+
+  // E
+  mapMessage.PointTbl[1].Latitude  = (40)/OBX_TRK_LATLONG_LSB;
+  mapMessage.PointTbl[1].Longitude = (0)/OBX_TRK_LATLONG_LSB;
+  sprintf(mapMessage.PointTbl[1].Label, "E");
+
+
+  // S
+  mapMessage.PointTbl[2].Latitude  = (39)/OBX_TRK_LATLONG_LSB;
+  mapMessage.PointTbl[2].Longitude = (-1)/OBX_TRK_LATLONG_LSB;
+  sprintf(mapMessage.PointTbl[2].Label, "S");
+
+
+  // W
+  mapMessage.PointTbl[3].Latitude  = (40)/OBX_TRK_LATLONG_LSB;
+  mapMessage.PointTbl[3].Longitude = (-2)/OBX_TRK_LATLONG_LSB;
+  sprintf(mapMessage.PointTbl[3].Label, "W");
+
+
+
+  // Write map message
+  qint64 lWriteSz = mapUdpSocket.writeDatagram((char*)&(mapMessage),sizeof(T_ObelixMapMessage),QHostAddress(ui->tbxIpMap->text()), ui->sbxPortMap->value());
+  if (lWriteSz != sizeof(T_ObelixMapMessage))
+  {
+    //
+  }
+
+
+  ////
+
+/*
+  mapMessage.ElementId = 1;
+  mapMessage.ElementType = OBX_MAP_POLY;
+  mapMessage.OperationType = OBX_MAP_UPDATE;
+  mapMessage.Number = 0;
+  mapMessage.PointCount = 10;
+
+  for (int i=0; i<10; i++)
+  {
+    mapMessage.PointTbl[i].Latitude  = (rand()%25)*i -100;
+    mapMessage.PointTbl[i].Longitude = (rand()%50)*i -100;
+  }
+
+
+  // Write map message
+  lWriteSz = mapUdpSocket.writeDatagram((char*)&(mapMessage),sizeof(T_ObelixMapMessage),QHostAddress(ui->tbxIpMap->text()), ui->sbxPortMap->value());
+  if (lWriteSz != sizeof(T_ObelixMapMessage))
+  {
+    //
+  }
+*/
+
+
+
+
+
+
+
 }
 
 void MainWindow::on_pbxBuildSimGenerated_clicked()
