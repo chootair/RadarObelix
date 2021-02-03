@@ -42,13 +42,6 @@ typedef struct _T_PlotTrack
   qint64        LastUpdate;
 }T_PlotTrack;
 
-typedef struct _T_PlotMap
-{
-  uint8_t                 Type;
-  uint16_t                Count;
-  QList<T_ObelixMapPoint> Points;
-}T_PlotMap;
-
 /// \brief Persistant mode
 typedef enum _T_PersistMode
 {
@@ -85,9 +78,6 @@ public:
   //
   inline uint   FifoObelixTrackLoad() const {return mFifoObelixTrackLoad;}
   inline T_FifoHandler   FifoObelixTrack() {return mFifoObelixTrack;}
-  //
-  inline uint   FifoObelixMapLoad() const {return mFifoObelixMapLoad;}
-  inline T_FifoHandler   FifoObelixMap() {return mFifoObelixMap;}
 
 
 
@@ -147,9 +137,7 @@ private:
   void PaintTrackPlots(QPainter* pPainter);
   void PaintHeadingFeatures(QPainter* pPainter);
   void PaintTools(QPainter* pPainter);
-  void PaintMap(QPainter* pPainter);
   int ReadTrackPlots();
-  int ReadMapPlots();
 
 private:
 
@@ -157,7 +145,6 @@ private:
   QImage* mScopeTrackImg;
   QImage* mHeadingImg;
   QImage* mToolsImg;
-  QImage* mMapImg;
   QImage* mWidgetImg;
   PresistImage* mPersistImg;
 
@@ -211,24 +198,8 @@ private:
   uint mFifoObelixTrackLoad;
 
   //
-  T_FifoHandler mFifoObelixMap;
-  T_ObelixMapMessage* mFifoMapPtr;
-  uint mFifoObelixMapLoad;
-
-  double  mLastMapPlatformLatitude;
-  double  mLastMapPlatformLongitude;
-  double  mLastMapPlatformHeading;
-
-
-
-
-
-  //
   QHash<uint16_t, T_PlotTrack> mTrackTable;
   qint64                       mLastTrackPlotUpdate;
-
-
-  QHash<uint16_t, T_PlotMap> mMapTable;
 
 
 
