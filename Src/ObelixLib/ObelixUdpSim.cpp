@@ -6,6 +6,7 @@ ObelixUdpSim::ObelixUdpSim(QObject *parent) : QObject(parent)
 
   mVideoMsgNb = 0;
   mTrackMsgNb = 0;
+  mMapMsgNb   = 0;
 
   //
   mVideoAzGapCorrectionRto = 1;
@@ -18,10 +19,15 @@ ObelixUdpSim::ObelixUdpSim(QObject *parent) : QObject(parent)
   //
   mTrackTbl = nullptr;
 
+  //
+  mPtfLatitude  = 0;
+  mPtfLongitude = 0;
+
 
   //
   mVideoUdpSocket = new QUdpSocket(this);
   mTrackUdpSocket = new QUdpSocket(this);
+  mMapUdpSocket   = new QUdpSocket(this);
   //
   mVideoIp    = QHostAddress::Null;
   mVideoPort = 0;
@@ -30,6 +36,7 @@ ObelixUdpSim::ObelixUdpSim(QObject *parent) : QObject(parent)
   //
   mVideoSendErrCnt = 0;
   mTrackSendErrCnt = 0;
+  mMapSendErrCnt   = 0;
 
   mBeam = nullptr;
   mBeamSize = 0;
@@ -37,20 +44,27 @@ ObelixUdpSim::ObelixUdpSim(QObject *parent) : QObject(parent)
 
 ObelixUdpSim::~ObelixUdpSim()
 {
+  delete mMapUdpSocket;
   delete mTrackUdpSocket;
   delete mVideoUdpSocket;
 }
 
-void ObelixUdpSim::SetUdpReaderVideoParameters(QString pIp, uint pPort)
+void ObelixUdpSim::SetUdpWriterVideoParameters(QString pIp, uint pPort)
 {
   mVideoIp = QHostAddress(pIp);
   mVideoPort = pPort;
 }
 
-void ObelixUdpSim::SetUdpReaderTrackParameters(QString pIp, uint pPort)
+void ObelixUdpSim::SetUdpWriterTrackParameters(QString pIp, uint pPort)
 {
   mTrackIp = QHostAddress(pIp);
   mTrackPort = pPort;
+}
+
+void ObelixUdpSim::SetUdpWriterMapParameters(QString pIp, uint pPort)
+{
+  mMapIp = QHostAddress(pIp);
+  mMapPort = pPort;
 }
 
 void ObelixUdpSim::SetVideoBeamParameters(int pNbLevel, int pNbCells)
@@ -133,9 +147,79 @@ void ObelixUdpSim::SendTrackTable()
   }
 }
 
+void ObelixUdpSim::SendObjectMapTable()
+{
+  T_ObelixMapMessage lMapMessage;
+  qint64 lWriteSz=0;
+  int i=0;
+  QHash<uint16_t, T_MapObject>::iterator lObjectIter;
+
+  // Loop on the map table
+  for (lObjectIter = mMapObjectTable.begin(); lObjectIter != mMapObjectTable.end(); ++lObjectIter)
+  {
+    // Header
+    lMapMessage.Number        = mMapMsgNb;
+    lMapMessage.OperationType = OBX_MAP_UPDATE;
+
+    // Platform
+    lMapMessage.PlatformLatitude  = mPtfLatitude/OBX_TRK_LATLONG_LSB;
+    lMapMessage.PlatformLongitude = mPtfLongitude/OBX_TRK_LATLONG_LSB;
+
+    // Map object
+    lMapMessage.ElementId   = lObjectIter.key();
+    lMapMessage.ElementType = lObjectIter.value().Type;
+    lMapMessage.PointCount  = qMin(lObjectIter.value().Points.count(), (int)OBX_MAP_TBL_CNT); /// \todo Mutiple message for large map object
+    //
+    for (uint16_t i=0; i<lMapMessage.PointCount; i++)
+    {
+      lMapMessage.PointTbl[i] = lObjectIter.value().Points.at(i);
+    }
+
+    // Write message datagram
+    lWriteSz = mMapUdpSocket->writeDatagram((char*)&(lMapMessage),sizeof(T_ObelixMapMessage), mMapIp, mMapPort);
+    if (lWriteSz != sizeof(T_ObelixTrackReportMessage))
+    {
+      mMapSendErrCnt++;
+    }
+
+    // Reset
+    mMapMsgNb++;
+  }
+}
+
 void ObelixUdpSim::SetTrackTableRef(QHash<uint16_t, T_ObelixTrack> *pTrackTable)
 {
   mTrackTbl = pTrackTable;
+}
+
+bool ObelixUdpSim::PushMapObject(uint16_t pId, uint8_t pType, T_ObelixMapPoint *pPointTable, uint pCount)
+{
+  // New map object
+  T_MapObject newMapObject;
+  newMapObject.Type = pType;
+  for(uint i=0; i<pCount; i++)
+  {
+    newMapObject.Points.append(pPointTable[i]);
+  }
+
+  // Add or update
+  if (false == mMapObjectTable.contains(pId))
+  {
+    mMapObjectTable.insert(pId, newMapObject);
+  }
+  else
+  {
+    mMapObjectTable[pId] = newMapObject;
+  }
+
+  //
+  return true;
+}
+
+void ObelixUdpSim::SetPlatformPosition(double pLatitude, double pLongitude)
+{
+  mPtfLatitude  = pLatitude;
+  mPtfLongitude = pLongitude;
 }
 
 

@@ -13,7 +13,9 @@ public:
   ObelixUdpSimThread();
 
 
-  void SetUdpReaderParameters(QString pVideoIp, uint pVideoPort, QString pTrackIp, uint pTrackPort);
+  void SetUdpReaderParameters(QString pVideoIp, uint pVideoPort,
+                              QString pTrackIp, uint pTrackPort,
+                              QString pMapIp  , uint pMapPort);
   void SetVideoBeamParameters(int pNbLevel, int pNbCells);
 
   inline void SetTimerPeridod(int pTimerPeriod){mTimerPeriod = pTimerPeriod;}
@@ -41,12 +43,14 @@ public:
 
 
 
+    void SetPlatformPosition(double pLatitude, double pLongitude);
 
     inline void SetRange(double pRange) {mRange = pRange;}
     inline double Range() const {return mRange;}
 
     inline void SetVideoMode(uint pVal) {mVideoMode = pVal;}
     inline uint VideoMode() const {return mVideoMode;}
+
 
 
     inline void SetPlatformHeading(double_t pVal) {mPlatformHeading = pVal;}
@@ -65,7 +69,18 @@ public:
 
 
 
+     void RemoveTrack( uint16_t pTrackId);
+    void PushTrack(T_ObelixTrack pTrack);
     void PushTracks(T_ObelixTrack* pTrackTable, uint pCount);
+
+     bool PushMapObject(uint16_t pId, uint8_t pType, T_ObelixMapPoint* pPointTable, uint pCount);
+
+
+
+    void PushMapPlolygon(T_ObelixMapPoint* pPointTable, uint pCount);
+    void PushMapPoints(T_ObelixMapPoint* pPointTable, uint pCount);
+    void PushMapPattern(T_ObelixMapPoint* pPointTable, uint pCount);
+
 
 
     void AskForStop();
@@ -88,7 +103,8 @@ private:
   uint    mVideoPort;
   QString mTrackIp;
   uint    mTrackPort;
-
+  QString mMapIp;
+  uint    mMapPort;
   //
   int mBeamNbLevel;
   int mBeamNbCells;
@@ -104,6 +120,9 @@ private:
   QHash<uint16_t, T_ObelixTrack> mTrackTable;
 
 
+
+
+
   double mVideoAzGapCorrectionRto;
   double mVideoAzGapLvlRto;
   double mVideoRgGapLvlRto;
@@ -111,6 +130,7 @@ private:
   double mVideoNoise;
 
   double mRange;
+
 
   double mPlatformHeading;
 

@@ -102,6 +102,9 @@ static const uint16_t OBX_MAP_DELETE = 2;
 static const uint16_t OBX_MAP_TBL_CNT = 20;
 
 
+
+
+
 typedef struct _T_ObelixMapMessage
 {
   uint16_t Number;                    ///< Message number

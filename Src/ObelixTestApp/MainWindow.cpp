@@ -140,7 +140,8 @@ void MainWindow::on_pbxRunSimulator_clicked()
   // Set parameters
   mObelixSimThread->SetVideoBeamParameters(ui->sbxNbLevel->value(), ui->sbxNbCells->value());
   mObelixSimThread->SetUdpReaderParameters(ui->tbxIpVideo->text(), ui->sbxPortVideo->value(),
-                                           ui->tbxIpTrack->text(), ui->sbxPortTrack->value());
+                                           ui->tbxIpTrack->text(), ui->sbxPortTrack->value(),
+                                           ui->tbxIpMap->text()  , ui->sbxPortMap->value());
 
   // Run
   mObelixSimThread->start();
@@ -462,82 +463,40 @@ void MainWindow::PushSimTrackTable()
 
 void MainWindow::PushSimMapTable()
 {
-  QUdpSocket mapUdpSocket;
-
-  T_ObelixMapMessage mapMessage;
-
-
-  mapMessage.ElementId = 0;
-  mapMessage.ElementType = OBX_MAP_SINGLE;
-  mapMessage.OperationType = OBX_MAP_UPDATE;
-  mapMessage.Number = 0;
-  mapMessage.PlatformLatitude  = ui->sbxPlatformLat->value()/OBX_TRK_LATLONG_LSB;
-  mapMessage.PlatformLongitude = ui->sbxPlatformLong->value()/OBX_TRK_LATLONG_LSB;
-  mapMessage.PointCount = 4;
-
+  T_ObelixMapPoint pointTbl[5];
 
   // N
-  mapMessage.PointTbl[0].Latitude  = (41)/OBX_TRK_LATLONG_LSB;
-  mapMessage.PointTbl[0].Longitude = (-1)/OBX_TRK_LATLONG_LSB;
-  sprintf(mapMessage.PointTbl[0].Label, "N");
+  pointTbl[0].Latitude  = (41)/OBX_TRK_LATLONG_LSB;
+  pointTbl[0].Longitude = (-1)/OBX_TRK_LATLONG_LSB;
+  sprintf(pointTbl[0].Label, "N");
 
   // E
-  mapMessage.PointTbl[1].Latitude  = (40)/OBX_TRK_LATLONG_LSB;
-  mapMessage.PointTbl[1].Longitude = (0)/OBX_TRK_LATLONG_LSB;
-  sprintf(mapMessage.PointTbl[1].Label, "E");
+  pointTbl[1].Latitude  = (40)/OBX_TRK_LATLONG_LSB;
+  pointTbl[1].Longitude = (0)/OBX_TRK_LATLONG_LSB;
+  sprintf(pointTbl[1].Label, "E");
 
 
   // S
-  mapMessage.PointTbl[2].Latitude  = (39)/OBX_TRK_LATLONG_LSB;
-  mapMessage.PointTbl[2].Longitude = (-1)/OBX_TRK_LATLONG_LSB;
-  sprintf(mapMessage.PointTbl[2].Label, "S");
+  pointTbl[2].Latitude  = (39)/OBX_TRK_LATLONG_LSB;
+  pointTbl[2].Longitude = (-1)/OBX_TRK_LATLONG_LSB;
+  sprintf(pointTbl[2].Label, "S");
 
 
   // W
-  mapMessage.PointTbl[3].Latitude  = (40)/OBX_TRK_LATLONG_LSB;
-  mapMessage.PointTbl[3].Longitude = (-2)/OBX_TRK_LATLONG_LSB;
-  sprintf(mapMessage.PointTbl[3].Label, "W");
+  pointTbl[3].Latitude  = (40)/OBX_TRK_LATLONG_LSB;
+  pointTbl[3].Longitude = (-2)/OBX_TRK_LATLONG_LSB;
+  sprintf(pointTbl[3].Label, "W");
 
 
-
-  // Write map message
-  qint64 lWriteSz = mapUdpSocket.writeDatagram((char*)&(mapMessage),sizeof(T_ObelixMapMessage),QHostAddress(ui->tbxIpMap->text()), ui->sbxPortMap->value());
-  if (lWriteSz != sizeof(T_ObelixMapMessage))
-  {
-    //
-  }
+  // W
+  pointTbl[4].Latitude  = (41)/OBX_TRK_LATLONG_LSB;
+  pointTbl[4].Longitude = (-2)/OBX_TRK_LATLONG_LSB;
+  sprintf(pointTbl[4].Label, "WNW");
 
 
-  ////
+   mObelixSimThread->PushMapObject(0,OBX_MAP_SINGLE,pointTbl,5);
 
-/*
-  mapMessage.ElementId = 1;
-  mapMessage.ElementType = OBX_MAP_POLY;
-  mapMessage.OperationType = OBX_MAP_UPDATE;
-  mapMessage.Number = 0;
-  mapMessage.PointCount = 10;
-
-  for (int i=0; i<10; i++)
-  {
-    mapMessage.PointTbl[i].Latitude  = (rand()%25)*i -100;
-    mapMessage.PointTbl[i].Longitude = (rand()%50)*i -100;
-  }
-
-
-  // Write map message
-  lWriteSz = mapUdpSocket.writeDatagram((char*)&(mapMessage),sizeof(T_ObelixMapMessage),QHostAddress(ui->tbxIpMap->text()), ui->sbxPortMap->value());
-  if (lWriteSz != sizeof(T_ObelixMapMessage))
-  {
-    //
-  }
-*/
-
-
-
-
-
-
-
+  mObelixSimThread->SetPlatformPosition(ui->sbxPlatformLat->value(), ui->sbxPlatformLong->value());
 }
 
 void MainWindow::on_pbxBuildSimGenerated_clicked()

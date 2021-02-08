@@ -24,12 +24,16 @@ ObelixUdpSimThread::ObelixUdpSimThread()
   mObelixUdpGene = nullptr;
 }
 
-void ObelixUdpSimThread::SetUdpReaderParameters(QString pVideoIp, uint pVideoPort, QString pTrackIp, uint pTrackPort)
+void ObelixUdpSimThread::SetUdpReaderParameters(QString pVideoIp, uint pVideoPort,
+                                                QString pTrackIp, uint pTrackPort,
+                                                QString pMapIp  , uint pMapPort)
 {
   mVideoIp = pVideoIp;
   mVideoPort = pVideoPort;
   mTrackIp = pTrackIp;
   mTrackPort = pTrackPort;
+  mMapIp     = pMapIp;
+  mMapPort  = pMapPort;
 }
 
 void ObelixUdpSimThread::SetVideoBeamParameters(int pNbLevel, int pNbCells)
@@ -104,6 +108,29 @@ void ObelixUdpSimThread::PushTracks(T_ObelixTrack *pTrackTable, uint pCount)
   }*/
 }
 
+bool ObelixUdpSimThread::PushMapObject(uint16_t          pId,
+                                       uint8_t           pType,
+                                       T_ObelixMapPoint* pPointTable,
+                                       uint              pCount)
+{
+  if (nullptr == mObelixUdpGene)
+  {
+    return false;
+  }
+
+  return mObelixUdpGene->PushMapObject(pId, pType, pPointTable, pCount);
+}
+
+void ObelixUdpSimThread::SetPlatformPosition(double pLatitude, double pLongitude)
+{
+  if (nullptr == mObelixUdpGene)
+  {
+    return;
+  }
+
+  return mObelixUdpGene->SetPlatformPosition(pLatitude, pLongitude);
+}
+
 void ObelixUdpSimThread::AskForStop()
 {
   mRun = false;
@@ -125,8 +152,9 @@ void ObelixUdpSimThread::run()
   mObelixUdpGene = new ObelixUdpSim();
 
 
-  mObelixUdpGene->SetUdpReaderVideoParameters(mVideoIp, mVideoPort);
-  mObelixUdpGene->SetUdpReaderTrackParameters(mTrackIp, mTrackPort);
+  mObelixUdpGene->SetUdpWriterVideoParameters(mVideoIp, mVideoPort);
+  mObelixUdpGene->SetUdpWriterTrackParameters(mTrackIp, mTrackPort);
+    mObelixUdpGene->SetUdpWriterMapParameters(mMapIp, mMapPort);
   mObelixUdpGene->SetVideoBeamParameters(mBeamNbLevel, mBeamNbCells);
   mObelixUdpGene->SetTrackTableRef(&mTrackTable);
 
@@ -206,4 +234,7 @@ void ObelixUdpSimThread::OnTimerTick()
   /// \todo Do less
   // Send Track report
   mObelixUdpGene->SendTrackTable();
+
+  // Send Map report
+  mObelixUdpGene->SendObjectMapTable();
 }
