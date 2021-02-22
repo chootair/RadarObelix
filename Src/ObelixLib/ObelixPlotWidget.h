@@ -100,43 +100,52 @@ public:
   inline void SetDisplayPxKtsRatio(double pDisplayPxKtsRatio) {mDisplayPxKtsRatio=pDisplayPxKtsRatio;}
 
 
-  inline bool NorthUp          () const {return mNorthUp;}
-  inline bool DisplayAntenna   () const {return mDisplayAntenna;}
-  inline bool DisplayRangeLimit() const {return mDisplayRangeLimit;}
-  inline bool DisplayRangeRings() const {return mDisplayRangeRings;}
-  inline bool DisplayCompas    () const {return mDisplayCompas;}
-  inline bool DisplayVideo     () const {return mDisplayVideo;}
-  inline bool DisplayTracks    () const {return mDisplayTracks;}
-  inline bool DisplayAircraft  () const {return mDisplayAircraft;}
-  inline bool DisplayHeading   () const {return mDisplayHeading;}
-  inline void SetNorthUp          (bool pEnable) {mNorthUp = pEnable; mNeedToPaintInfo = true;}
-  inline void SetDisplayAntenna   (bool pEnable) {mDisplayAntenna = pEnable;}
-  inline void SetDisplayRangeLimit(bool pEnable) {mDisplayRangeLimit = pEnable; mNeedToPaintInfo=true;}
-  inline void SetDisplayRangeRings(bool pEnable) {mDisplayRangeRings = pEnable; mNeedToPaintInfo=true;}
-  inline void SetDisplayCompas    (bool pEnable) {mDisplayCompas = pEnable; mNeedToPaintInfo=true;}
-  inline void SetDisplayVideo     (bool pEnable) {mDisplayVideo = pEnable;}
-  inline void SetDisplayTracks    (bool pEnable) {mDisplayTracks = pEnable;}
-  inline void SetDisplayAircraft  (bool pEnable) {mDisplayAircraft = pEnable; mNeedToPaintInfo=true;}
-  inline void SetDisplayHeading   (bool pEnable) {mDisplayHeading  = pEnable; mNeedToPaintInfo=true;}
+  inline bool NorthUp           () const {return mNorthUp;}
+  inline bool DisplayAntenna    () const {return mDisplayAntenna;}
+  inline bool DisplayRangeLimit () const {return mDisplayRangeLimit;}
+  inline bool DisplayRangeRings () const {return mDisplayRangeRings;}
+  inline bool DisplayCompas     () const {return mDisplayCompas;}
+  inline bool DisplayVideo      () const {return mDisplayVideo;}
+  inline bool DisplayTracks     () const {return mDisplayTracks;}
+  inline bool DisplayAircraft   () const {return mDisplayAircraft;}
+  inline bool DisplayHeading    () const {return mDisplayHeading;}
+  inline bool DisplayMapPoints  () const {return mDisplayMapPoints;}
+  inline bool DisplayMapPolygons() const {return mDisplayMapPolygons;}
+
+  inline void SetNorthUp            (bool pEnable) {mNorthUp            = pEnable; mNeedToPaintInfo = true;}
+  inline void SetDisplayAntenna     (bool pEnable) {mDisplayAntenna     = pEnable;}
+  inline void SetDisplayRangeLimit  (bool pEnable) {mDisplayRangeLimit  = pEnable; mNeedToPaintInfo=true;}
+  inline void SetDisplayRangeRings  (bool pEnable) {mDisplayRangeRings  = pEnable; mNeedToPaintInfo=true;}
+  inline void SetDisplayCompas      (bool pEnable) {mDisplayCompas      = pEnable; mNeedToPaintInfo=true;}
+  inline void SetDisplayVideo       (bool pEnable) {mDisplayVideo       = pEnable;}
+  inline void SetDisplayTracks      (bool pEnable) {mDisplayTracks      = pEnable;}
+  inline void SetDisplayAircraft    (bool pEnable) {mDisplayAircraft    = pEnable; mNeedToPaintInfo=true;}
+  inline void SetDisplayHeading     (bool pEnable) {mDisplayHeading     = pEnable; mNeedToPaintInfo=true;}
+  inline void SetDisplayMapPoints   (bool pEnable) {mDisplayMapPoints   = pEnable;}
+  inline void SetDisplayMapPolygons (bool pEnable) {mDisplayMapPolygons = pEnable;}
 
 
-  inline QColor ColorAntenna   () const {return mColorAntenna;}
-  inline QColor ColorRangeLimit() const {return mColorRangeLimit;}
-  inline QColor ColorRangeRings() const {return mColorRangeRings;}
-  inline QColor ColorCompas    () const {return mColorCompas;}
-  inline QColor ColorVideo     () const {return mColorVideo;}
-  inline QColor ColorTracks    () const {return mColorTracks;}
-  inline QColor ColorAircraft  () const {return mColorAircraft;}
-  inline QColor ColorHeading   () const {return mColorHeading;}
+  inline QColor ColorAntenna    () const {return mColorAntenna;}
+  inline QColor ColorRangeLimit () const {return mColorRangeLimit;}
+  inline QColor ColorRangeRings () const {return mColorRangeRings;}
+  inline QColor ColorCompas     () const {return mColorCompas;}
+  inline QColor ColorVideo      () const {return mColorVideo;}
+  inline QColor ColorTracks     () const {return mColorTracks;}
+  inline QColor ColorAircraft   () const {return mColorAircraft;}
+  inline QColor ColorHeading    () const {return mColorHeading;}
+  inline QColor ColorMapPoints  () const {return mColorMapPoints;}
+  inline QColor ColorMapPolygons() const {return mColorMapPolygons;}
 
-  inline void  SetColorAntenna   (QColor pColor) {mColorAntenna    = pColor;}
-  inline void  SetColorRangeLimit(QColor pColor) {mColorRangeLimit = pColor; mNeedToPaintInfo=true;}
-  inline void  SetColorRangeRings(QColor pColor) {mColorRangeRings = pColor; mNeedToPaintInfo=true;}
-  inline void  SetColorCompas    (QColor pColor) {mColorCompas     = pColor; mNeedToPaintInfo=true;}
-  inline void  SetColorVideo     (QColor pColor) {mColorVideo      = pColor;}
-  inline void  SetColorTracks    (QColor pColor) {mColorTracks     = pColor;}
-  inline void  SetColorAircraft  (QColor pColor) {mColorAircraft   = pColor;}
-  inline void  SetColorHeading   (QColor pColor) {mColorHeading    = pColor;}
+  inline void  SetColorAntenna   (QColor pColor) {mColorAntenna     = pColor;}
+  inline void  SetColorRangeLimit(QColor pColor) {mColorRangeLimit  = pColor; mNeedToPaintInfo=true;}
+  inline void  SetColorRangeRings(QColor pColor) {mColorRangeRings  = pColor; mNeedToPaintInfo=true;}
+  inline void  SetColorCompas    (QColor pColor) {mColorCompas      = pColor; mNeedToPaintInfo=true;}
+  inline void  SetColorVideo     (QColor pColor) {mColorVideo       = pColor;}
+  inline void  SetColorTracks    (QColor pColor) {mColorTracks      = pColor;}
+  inline void  SetColorAircraft  (QColor pColor) {mColorAircraft    = pColor;}
+  inline void  SetColorHeading   (QColor pColor) {mColorHeading     = pColor;}
+  inline void SetColorMapPoints  (QColor pColor) {mColorMapPoints   = pColor;}
+  inline void SetColorMapPolygons(QColor pColor) {mColorMapPolygons = pColor;}
 
 protected:
   void resizeEvent(QResizeEvent* event) override;
@@ -241,6 +250,8 @@ private:
   bool mDisplayTracks;
   bool mDisplayAircraft;
   bool mDisplayHeading;
+  bool mDisplayMapPoints;
+  bool mDisplayMapPolygons;
   bool mNorthUp;
 
   QColor mColorAntenna;
@@ -251,6 +262,8 @@ private:
   QColor mColorTracks;
   QColor mColorAircraft;
   QColor mColorHeading;
+  QColor mColorMapPoints;
+  QColor mColorMapPolygons;
 
   bool mNeedToPaintInfo;
 

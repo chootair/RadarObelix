@@ -1,16 +1,6 @@
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
 
-#define KNOT_TO_MS 0.514444
-#define NM_TO_M 1852
-#define DEG_TO_RAD 0.0174533
-#define EARTH_RADIUS_M 6378137
-
-
-auto LonToX = [](double lon)->double {return EARTH_RADIUS_M *  DEG_TO_RAD * lon;};
-auto LatToY = [](double lat)->double {return EARTH_RADIUS_M *  DEG_TO_RAD * lat;};
-auto XToLon = [](double x)->double {return x / (EARTH_RADIUS_M *  DEG_TO_RAD);};
-auto YToLat = [](double y)->double {return y / (EARTH_RADIUS_M *  DEG_TO_RAD);};
 
 
 std::string gCallSingList[10] = { "Maverick",
@@ -350,6 +340,10 @@ void MainWindow::BuildSimTrackTable()
   }
 
   //
+  double lPlatformLat  = ui->sbxPlatformLat->value();
+  double lPlatformLong = ui->sbxPlatformLong->value();
+
+  //
   mSimTableSize = ui->sbxNbSimTracks->value();
   mSimTable  = (T_SimTrack*)calloc(mSimTableSize, sizeof(T_SimTrack));
 
@@ -400,60 +394,93 @@ void MainWindow::BuildSimTrackTable()
     }
 
     //
-    //mSimTable[i].CallSing = gCallSingList[rand()%10] + "_" + std::to_string(rand()%100);
+    OTB::AzDstToLatLon(lPlatformLat,
+                       lPlatformLong,
+                       mSimTable[i].Bearing,
+                       mSimTable[i].Distance*OTB::NM_TO_M,
+                       mSimTable[i].Latitude,
+                       mSimTable[i].Longitude);
   }
 }
 
 void MainWindow::PushSimTrackTable()
 {
+  double lPlatformLat  = ui->sbxPlatformLat->value();
+  double lPlatformLong = ui->sbxPlatformLong->value();
+  //
+  double lTrackInLat = 0;
+  double lTrackInLong = 0;
+  double lTrackOutLat = 0;
+  double lTrackOutLong = 0;
+  //
+  double lDeltaT = 0;
+
   // Compute trajectory
   for (int i=0; i<mSimTableSize;  i++)
   {
+
     double lTrackBearing  = static_cast<double>(mSimTable[i].Bearing);
     double lTrackDistance = static_cast<double>(mSimTable[i].Distance);
     double lTrackCourse   = static_cast<double>(mSimTable[i].Course);
     double lTrackSpeed    = static_cast<double>(mSimTable[i].GroundSpeed);
 
 
-    double lDeltaT = ui->sbxSimPeriod->value()*0.001*ui->sbxSimSpeedFactor->value();
 
-    double lTrackX = lTrackDistance * NM_TO_M * sin(lTrackBearing*DEG_TO_RAD);
-    double lTrackY = lTrackDistance * NM_TO_M * cos(lTrackBearing*DEG_TO_RAD);
+    lTrackInLat  = mSimTable[i].Latitude;
+    lTrackInLong = mSimTable[i].Longitude;
+    lDeltaT      = ui->sbxSimPeriod->value()*0.001*ui->sbxSimSpeedFactor->value();
 
-    double lSpeedX = lTrackSpeed * KNOT_TO_MS * sin(lTrackCourse*DEG_TO_RAD);
-    double lSpeedY = lTrackSpeed * KNOT_TO_MS * cos(lTrackCourse*DEG_TO_RAD);
+    // Compute track trajectory
+    OTB::ComputeTrajectory(lTrackInLat,
+                           lTrackInLong,
+                           lTrackOutLat,
+                           lTrackOutLong,
+                           mSimTable[i].GroundSpeed*OTB::KNOT_TO_MS,
+                           mSimTable[i].Course,
+                           lDeltaT);
 
+    // Get Azimuth distance from platfrom
+    OTB::ComputeAzimuthDistance(lPlatformLat,
+                                lPlatformLong,
+                                lTrackOutLat,
+                                lTrackOutLong,
+                                lTrackBearing,
+                                lTrackDistance);
 
-    lTrackX = (lTrackX + lDeltaT * lSpeedX)/NM_TO_M;
-    lTrackY = (lTrackY + lDeltaT * lSpeedY)/NM_TO_M;
+    // Unit corrections
+    lTrackDistance = lTrackDistance/OTB::NM_TO_M;
 
-    lTrackBearing = atan2(lTrackX,lTrackY)/DEG_TO_RAD;
-    lTrackDistance = sqrt(lTrackX*lTrackX + lTrackY*lTrackY);
-
-
-
+    // Update track message
     if (lTrackDistance >= 100)
     {
-      mSimTable[i].Bearing = rand()%static_cast<int>(ui->sbxSimAz->value());
-      mSimTable[i].Distance   = rand()%static_cast<int>(ui->sbxSimDist->value());
-      mSimTable[i].Course  = rand()%static_cast<int>(ui->sbxSimCourse->value());
-      mSimTable[i].GroundSpeed   = rand()%static_cast<int>(ui->sbxSimSpeed->value());
+      // Reset track
+      mSimTable[i].Bearing     = rand()%static_cast<int>(ui->sbxSimAz->value());
+      mSimTable[i].Distance    = rand()%static_cast<int>(ui->sbxSimDist->value());
+      mSimTable[i].Course      = rand()%static_cast<int>(ui->sbxSimCourse->value());
+      mSimTable[i].GroundSpeed = rand()%static_cast<int>(ui->sbxSimSpeed->value());
+      //
+      OTB::AzDstToLatLon(lPlatformLat, lPlatformLong, mSimTable[i].Bearing, mSimTable[i].Distance*OTB::NM_TO_M, lTrackOutLat, lTrackOutLong);
+      //
+      mSimTable[i].Latitude  = lTrackOutLat;
+      mSimTable[i].Longitude = lTrackOutLong;
     }
     else
     {
-      mSimTable[i].Bearing = lTrackBearing;
-      mSimTable[i].Distance   = lTrackDistance;
+      mSimTable[i].Latitude  = lTrackOutLat;
+      mSimTable[i].Longitude = lTrackOutLong;
+      mSimTable[i].Bearing   = lTrackBearing;
+      mSimTable[i].Distance  = lTrackDistance;
     }
   }
 
   // Push to sim thread
-  for (int i=0; i<mSimTableSize;  i++)
+  for (quint16 i=0; i<mSimTableSize;  i++)
   {
-    mlTrackTable[i].Id = i;
-    mlTrackTable[i].Bearing = static_cast<quint16>(mSimTable[i].Bearing/OBX_TRK_BEARINGCOURSE_LSB);
-    mlTrackTable[i].Distance   = static_cast<quint16>(mSimTable[i].Distance/OBX_TRK_DISTANCE_LSB);
-    mlTrackTable[i].Course  = static_cast<quint16>(mSimTable[i].Course/OBX_TRK_BEARINGCOURSE_LSB);
-    mlTrackTable[i].GroundSpeed   = static_cast<quint16>(mSimTable[i].GroundSpeed/OBX_TRK_SPEED_LSB);
+    mlTrackTable[i].Id          = i;
+    mlTrackTable[i].Bearing     = static_cast<quint16>(mSimTable[i].Bearing    /OBX_TRK_BEARINGCOURSE_LSB);
+    mlTrackTable[i].Distance    = static_cast<quint16>(mSimTable[i].Distance   /OBX_TRK_DISTANCE_LSB);
+    mlTrackTable[i].Course      = static_cast<quint16>(mSimTable[i].Course     /OBX_TRK_BEARINGCOURSE_LSB);
+    mlTrackTable[i].GroundSpeed = static_cast<quint16>(mSimTable[i].GroundSpeed/OBX_TRK_SPEED_LSB);
     //
     sprintf(mlTrackTable[i].CallSing, mSimTable[i].CallSing.c_str());
   }
@@ -463,38 +490,54 @@ void MainWindow::PushSimTrackTable()
 
 void MainWindow::PushSimMapTable()
 {
-  T_ObelixMapPoint pointTbl[5];
+  T_ObelixMapPoint lSinglePointTbl[5];
 
   // N
-  pointTbl[0].Latitude  = (41)/OBX_TRK_LATLONG_LSB;
-  pointTbl[0].Longitude = (-1)/OBX_TRK_LATLONG_LSB;
-  sprintf(pointTbl[0].Label, "N");
+  lSinglePointTbl[0].Latitude  = (41)/OBX_TRK_LATLONG_LSB;
+  lSinglePointTbl[0].Longitude = (-1)/OBX_TRK_LATLONG_LSB;
+  sprintf(lSinglePointTbl[0].Label, "N");
 
   // E
-  pointTbl[1].Latitude  = (40)/OBX_TRK_LATLONG_LSB;
-  pointTbl[1].Longitude = (0)/OBX_TRK_LATLONG_LSB;
-  sprintf(pointTbl[1].Label, "E");
+  lSinglePointTbl[1].Latitude  = (40)/OBX_TRK_LATLONG_LSB;
+  lSinglePointTbl[1].Longitude = (0)/OBX_TRK_LATLONG_LSB;
+  sprintf(lSinglePointTbl[1].Label, "E");
 
 
   // S
-  pointTbl[2].Latitude  = (39)/OBX_TRK_LATLONG_LSB;
-  pointTbl[2].Longitude = (-1)/OBX_TRK_LATLONG_LSB;
-  sprintf(pointTbl[2].Label, "S");
+  lSinglePointTbl[2].Latitude  = (39)/OBX_TRK_LATLONG_LSB;
+  lSinglePointTbl[2].Longitude = (-1)/OBX_TRK_LATLONG_LSB;
+  sprintf(lSinglePointTbl[2].Label, "S");
 
 
   // W
-  pointTbl[3].Latitude  = (40)/OBX_TRK_LATLONG_LSB;
-  pointTbl[3].Longitude = (-2)/OBX_TRK_LATLONG_LSB;
-  sprintf(pointTbl[3].Label, "W");
+  lSinglePointTbl[3].Latitude  = (40)/OBX_TRK_LATLONG_LSB;
+  lSinglePointTbl[3].Longitude = (-2)/OBX_TRK_LATLONG_LSB;
+  sprintf(lSinglePointTbl[3].Label, "W");
 
 
   // W
-  pointTbl[4].Latitude  = (41)/OBX_TRK_LATLONG_LSB;
-  pointTbl[4].Longitude = (-2)/OBX_TRK_LATLONG_LSB;
-  sprintf(pointTbl[4].Label, "WNW");
+  lSinglePointTbl[4].Latitude  = (41)/OBX_TRK_LATLONG_LSB;
+  lSinglePointTbl[4].Longitude = (-2)/OBX_TRK_LATLONG_LSB;
+  sprintf(lSinglePointTbl[4].Label, "WNW");
 
 
-   mObelixSimThread->PushMapObject(0,OBX_MAP_SINGLE,pointTbl,5);
+   mObelixSimThread->PushMapObject(0,OBX_MAP_SINGLE,lSinglePointTbl,5);
+
+
+
+   int lPolySize = 10;
+   T_ObelixMapPoint lPolyPointTbl[10];
+   for (int i=0; i<lPolySize; i++)
+   {
+     lPolyPointTbl[i].Latitude   = (40.0 + (rand()%100)*0.01)/OBX_TRK_LATLONG_LSB;
+     lPolyPointTbl[i].Longitude = (-2.0 + (rand()%100)*0.01)/OBX_TRK_LATLONG_LSB;
+   }
+   mObelixSimThread->PushMapObject(1,OBX_MAP_POLY,lPolyPointTbl,lPolySize);
+
+
+
+
+
 
   mObelixSimThread->SetPlatformPosition(ui->sbxPlatformLat->value(), ui->sbxPlatformLong->value());
 }

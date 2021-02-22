@@ -1,64 +1,5 @@
 #include "ObelixPlotWidget.h"
-
-#define _USE_MATH_DEFINES
-#include <math.h>
-
-static const double DEG_TO_RAD     = M_PI/180;
-static const double EARTH_RADIUS_M = 6378137;
-static const double NM_TO_M        = 1852;
-
-auto LonToX = [](double lon)->double {return EARTH_RADIUS_M *  DEG_TO_RAD * lon;};
-auto LatToY = [](double lat)->double {return EARTH_RADIUS_M *  DEG_TO_RAD * lat;};
-auto XToLon = [](double x)->double {return x / (EARTH_RADIUS_M *  DEG_TO_RAD);};
-auto YToLat = [](double y)->double {return y / (EARTH_RADIUS_M *  DEG_TO_RAD);};
-
-
-void ComputeAzimuthDistance(double pLatA, double pLongA,
-                            double pLatB, double pLongB,
-                            double& pAzimuth, double& pDistance)
-{
-  double lXA = LonToX(pLongA);
-  double lYA = LatToY(pLatA);
-  //
-  double lXB = LonToX(pLongB);
-  double lYB = LatToY(pLatB);
-
-  //
-  pDistance = sqrt((lYB-lYA)*(lYB-lYA) + (lXB-lXA)*(lXB-lXA));
-
-  /// \todo Improuve
-  if (fabs(lYB-lYA) < 1)
-  {
-    pAzimuth = 0;
-  }
-  else if (fabs(lYB-lYA) < 1)
-  {
-    pAzimuth = 0;
-  }
-
-  pAzimuth = atan2((lXB-lXA),(lYB-lYA))/DEG_TO_RAD;
-
-
-  // Negative correction
-  if (pAzimuth < 0)
-  {
-    pAzimuth = 360 + pAzimuth;
-  }
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
+#include "ObelixToolbox.h"
 
 
 
@@ -118,8 +59,8 @@ ObelixPlotWidget::ObelixPlotWidget(QWidget *parent) : QOpenGLWidget(parent)
   mPersistImg = new PresistImage(800,800);
   mPersistImg->SetPersistence(0);
   mPersistRatio = -1;
-    mPersistMultiplyColor.setRgb(0,0,0);
-    mPersistMode = PersistComposition;
+  mPersistMultiplyColor.setRgb(0,0,0);
+  mPersistMode = PersistComposition;
   
   mLbxWidget = new QLabel("SCOPE RADAR", this);
   mLbxWidget->lower();
@@ -153,17 +94,21 @@ ObelixPlotWidget::ObelixPlotWidget(QWidget *parent) : QOpenGLWidget(parent)
   mDisplayVideo = true;
   mDisplayTracks = true;
   mDisplayAircraft = true;
+  mDisplayMapPoints = true;
+  mDisplayMapPolygons = true;
   //
   mNorthUp = true;
 
-  mColorAntenna    = Qt::green;
-  mColorRangeLimit = Qt::green;
-  mColorRangeRings = Qt::green;
-  mColorCompas     = Qt::green;
-  mColorVideo      = Qt::green;
-  mColorTracks     = Qt::white;
-  mColorAircraft   = Qt::yellow;
-  mColorHeading    = Qt::red;
+  mColorAntenna     = Qt::green;
+  mColorRangeLimit  = Qt::green;
+  mColorRangeRings  = Qt::green;
+  mColorCompas      = Qt::green;
+  mColorVideo       = Qt::green;
+  mColorTracks      = Qt::white;
+  mColorAircraft    = Qt::yellow;
+  mColorHeading     = Qt::red;
+  mColorMapPoints   = Qt::darkYellow;
+  mColorMapPolygons = Qt::darkRed;
 
 
   mNeedToPaintInfo = true;
@@ -341,10 +286,10 @@ void ObelixPlotWidget::PaintVideoCells(QPainter *pPainter)
   // Loop on message
   for (uint i=0; i<(*(mFifoObelixVideo.mFifoIndexPtr)); i++)
   {
-    double lCosStart = cos((lAzimuthOffsetDeg + mFifoVideoPtr[i].StartAzDeg) * DEG_TO_RAD);
-    double lSinStart = sin((lAzimuthOffsetDeg + mFifoVideoPtr[i].StartAzDeg) * DEG_TO_RAD);
-    double lCosEnd   = cos((lAzimuthOffsetDeg + mFifoVideoPtr[i].EndAzDeg  ) * DEG_TO_RAD);
-    double lSinEnd   = sin((lAzimuthOffsetDeg + mFifoVideoPtr[i].EndAzDeg  ) * DEG_TO_RAD);
+    double lCosStart = cos((lAzimuthOffsetDeg + mFifoVideoPtr[i].StartAzDeg) * OTB::DEG_TO_RAD);
+    double lSinStart = sin((lAzimuthOffsetDeg + mFifoVideoPtr[i].StartAzDeg) * OTB::DEG_TO_RAD);
+    double lCosEnd   = cos((lAzimuthOffsetDeg + mFifoVideoPtr[i].EndAzDeg  ) * OTB::DEG_TO_RAD);
+    double lSinEnd   = sin((lAzimuthOffsetDeg + mFifoVideoPtr[i].EndAzDeg  ) * OTB::DEG_TO_RAD);
 
     mLastAzimuthDeg = qMax(mLastAzimuthDeg, mFifoVideoPtr[i].EndAzDeg);
     
@@ -487,7 +432,7 @@ void ObelixPlotWidget::PaintTrackPlots(QPainter *pPainter)
   // Heading Up
   if (mNorthUp == false)
   {
-    lAzimuthOffsetRad = -mLastHeadingDeg*DEG_TO_RAD;
+    lAzimuthOffsetRad = -mLastHeadingDeg*OTB::DEG_TO_RAD;
   }
 
   // Loop on plot track
@@ -505,7 +450,7 @@ void ObelixPlotWidget::PaintTrackPlots(QPainter *pPainter)
 
     // Track Position
     double lTrackRangePx    = mPlotRad/mRangeNm*lPlotTrack.Track.Distance*OBX_TRK_DISTANCE_LSB;
-    double lTrackBreaingRad = static_cast<double>(lPlotTrack.Track.Bearing)*OBX_TRK_BEARINGCOURSE_LSB*DEG_TO_RAD;
+    double lTrackBreaingRad = static_cast<double>(lPlotTrack.Track.Bearing)*OBX_TRK_BEARINGCOURSE_LSB*OTB::DEG_TO_RAD;
     //
     lTrackPt.setX(width()/2  + static_cast<int>(lTrackRangePx * sin(lAzimuthOffsetRad + lTrackBreaingRad)));
     lTrackPt.setY(height()/2 - static_cast<int>(lTrackRangePx * cos(lAzimuthOffsetRad + lTrackBreaingRad)));
@@ -515,7 +460,7 @@ void ObelixPlotWidget::PaintTrackPlots(QPainter *pPainter)
     double lTrackSpeedPx   = mDisplayPxKtsRatio*lTrackSpeedKts;
     //
     double lTrackCourseDeg = static_cast<double>(lPlotTrack.Track.Course)*OBX_TRK_BEARINGCOURSE_LSB;
-    double lTrackCourseRad = lTrackCourseDeg*DEG_TO_RAD;
+    double lTrackCourseRad = lTrackCourseDeg*OTB::DEG_TO_RAD;
     //
     lVectorPt.setX(lTrackPt.x() + static_cast<int>(lTrackSpeedPx*sin(lAzimuthOffsetRad + lTrackCourseRad)));
     lVectorPt.setY(lTrackPt.y() - static_cast<int>(lTrackSpeedPx*cos(lAzimuthOffsetRad + lTrackCourseRad)));
@@ -535,41 +480,41 @@ void ObelixPlotWidget::PaintTrackPlots(QPainter *pPainter)
     pPainter->drawLine(lTrackPt, lVectorPt);
     pPainter->drawText(lTrackPt.x()+10, lTrackPt.y()+7,QString("[%1]%2").arg(lPlotTrack.Track.Id).arg(lAgeString));
     pPainter->drawText(lTrackPt.x()+10, lTrackPt.y()+22,QString("%1°/%2kts").arg(static_cast<int>(lTrackCourseDeg),3,10,QChar('0'))
-                                                                            .arg(static_cast<int>(lTrackSpeedKts),3,10,QChar('0')));
+                       .arg(static_cast<int>(lTrackSpeedKts),3,10,QChar('0')));
     pPainter->drawText(lTrackPt.x()+10, lTrackPt.y()+37,QString("%1").arg(lPlotTrack.Track.CallSing));
   }
 }
 
 void ObelixPlotWidget::PaintHeadingFeatures(QPainter *pPainter)
 {
-    // Translate painter
-    pPainter->translate(mXCtr,mYCtr);
+  // Translate painter
+  pPainter->translate(mXCtr,mYCtr);
 
-    // Rotate for Aircraft & Heading
-    if (mNorthUp == true)
-    {
-      pPainter->rotate(mLastHeadingDeg);
-    }
+  // Rotate for Aircraft & Heading
+  if (mNorthUp == true)
+  {
+    pPainter->rotate(mLastHeadingDeg);
+  }
 
-    // Heading
-    if (mDisplayHeading == true)
-    {
-      pPainter->setPen(mColorHeading);
-      pPainter->drawLine(0, 0, 0, -0.8*mPlotRad);
-    }
+  // Heading
+  if (mDisplayHeading == true)
+  {
+    pPainter->setPen(mColorHeading);
+    pPainter->drawLine(0, 0, 0, -0.8*mPlotRad);
+  }
 
-    // Aircraft
-    if (mDisplayAircraft == true)
-    {
-        int lAftB = 6;
-        int lAftWidth = 15;
-        int lAftHeight = 10;
+  // Aircraft
+  if (mDisplayAircraft == true)
+  {
+    int lAftB = 6;
+    int lAftWidth = 15;
+    int lAftHeight = 10;
 
-        pPainter->setPen(QPen(mColorAircraft,2));
-        pPainter->drawLine(0,-10,0,15);
-        pPainter->drawLine(-lAftWidth,0,lAftWidth,0);
-        pPainter->drawLine(-5,10,5,10);
-    }
+    pPainter->setPen(QPen(mColorAircraft,2));
+    pPainter->drawLine(0,-10,0,15);
+    pPainter->drawLine(-lAftWidth,0,lAftWidth,0);
+    pPainter->drawLine(-5,10,5,10);
+  }
 }
 
 void ObelixPlotWidget::PaintTools(QPainter *pPainter)
@@ -593,7 +538,7 @@ void ObelixPlotWidget::PaintTools(QPainter *pPainter)
     int lRangeRingSpace = static_cast<int>(10*floor(mRangeNm/30.0));
 
     //
-    lRangeRingSpace = qMax(lRangeRingSpace, 1);
+    lRangeRingSpace = qMax(lRangeRingSpace, 5);
 
     // Loop on range rings
     for (int lRangeRingDst=lRangeRingSpace; lRangeRingDst<mRangeNm; lRangeRingDst += lRangeRingSpace)
@@ -647,7 +592,7 @@ void ObelixPlotWidget::PaintTools(QPainter *pPainter)
         continue;
       }
 
-      double lMarkAngleRad = (lAzimuthOffsetDeg+iDeg)*DEG_TO_RAD;
+      double lMarkAngleRad = (lAzimuthOffsetDeg+iDeg)*OTB::DEG_TO_RAD;
 
       // Mark
       pPainter->setPen(QPen(mColorCompas,lMarkWidth));
@@ -691,75 +636,82 @@ void ObelixPlotWidget::PaintMap(QPainter *pPainter)
   // Heading Up
   if (mNorthUp == false)
   {
-    lAzimuthOffsetRad = -mLastHeadingDeg*DEG_TO_RAD;
+    lAzimuthOffsetRad = -mLastHeadingDeg*OTB::DEG_TO_RAD;
   }
 
 
-  pPainter->setPen(Qt::cyan);
+
 
   // Platform position
-  double lPlatformX = LonToX(mLastMapPlatformLongitude);
-  double lPlatformY = LatToY(mLastMapPlatformLatitude);
+  double lPlatformX = OTB::LonToX(mLastMapPlatformLongitude);
+  double lPlatformY = OTB::LatToY(mLastMapPlatformLatitude);
 
   // Loop on plot track
   foreach (T_PlotMap lPlotMap, mMapTable)
   {
     QPolygon polygon;
 
+    // Default
+    pPainter->setPen(Qt::red);
+    pPainter->setPen(QPen(QBrush(mColorMapPoints),5));
+
     foreach (T_ObelixMapPoint lPlotPoint, lPlotMap.Points)
     {
-      double lPixelRatio = mPlotRad/(mRangeNm*NM_TO_M);
+      double lPixelRatio = mPlotRad/(mRangeNm * OTB::NM_TO_M);
       double lPtLat  = static_cast<double>(lPlotPoint.Latitude)  * OBX_TRK_LATLONG_LSB;
       double lPtLong = static_cast<double>(lPlotPoint.Longitude) * OBX_TRK_LATLONG_LSB;
 
-      double lPtX =   (LonToX(lPtLong) - lPlatformX) * lPixelRatio;
-      double lPtY =  -(LatToY(lPtLat)  - lPlatformY) * lPixelRatio;
+      double lPtX =   (OTB::LonToX(lPtLong) - lPlatformX) * lPixelRatio;
+      double lPtY =  -(OTB::LatToY(lPtLat)  - lPlatformY) * lPixelRatio;
 
 
       double lPtAz = 0;
       double lPtDist = 0;
 
 
-      ComputeAzimuthDistance(mLastMapPlatformLatitude, mLastMapPlatformLongitude, lPtLat, lPtLong, lPtAz, lPtDist);
+      OTB::ComputeAzimuthDistance(mLastMapPlatformLatitude, mLastMapPlatformLongitude, lPtLat, lPtLong, lPtAz, lPtDist);
 
 
       lPtDist = lPtDist * lPixelRatio;
-      lPtAz   = lPtAz * DEG_TO_RAD;
+      lPtAz   = lPtAz * OTB::DEG_TO_RAD;
 
-      // Track Position
-      //double lTrackRangePx    = mPlotRad/mRangeNm*lPlotTrack.Track.Distance*OBX_TRK_DISTANCE_LSB;
-      //double lTrackBreaingRad = static_cast<double>(lPlotTrack.Track.Bearing)*OBX_TRK_BEARINGCOURSE_LSB*DEG_TO_RAD;
-      //
+      // Point Position
       lPtX = width()/2  + static_cast<int>(lPtDist * sin(lAzimuthOffsetRad + lPtAz));
       lPtY = height()/2 - static_cast<int>(lPtDist * cos(lAzimuthOffsetRad + lPtAz));
 
 
-
-
-      polygon.append(QPoint(lPtX, lPtY));
-
-
-      //
+      if (lPlotMap.Type == OBX_MAP_POLY)
       {
-      QSize        sz_l;
-      QFontMetrics ft_metrics_l (this->font());
-      QString lText = QString(lPlotPoint.Label);
-
-
-      //
-      sz_l = ft_metrics_l.size(Qt::TextSingleLine, lText);
-      int lTextRad = 30;
-
-      pPainter->drawText( lPtX - 0.5*sz_l.width(),
-                          lPtY + 0.7*sz_l.height(),lText);// ,Qt::AlignVCenter,sz_l.width(),sz_l.height(),lText);
+      polygon.append(QPoint(lPtX, lPtY));
       }
+      // Single point object
+      else if ((lPlotMap.Type == OBX_MAP_SINGLE) && (mDisplayMapPoints == true))
+      {
+        QSize        sz_l;
+        QFontMetrics ft_metrics_l (this->font());
+        QString lText = QString(lPlotPoint.Label);
 
 
+        pPainter->drawPoint(lPtX, lPtY);
 
+        //
+        sz_l = ft_metrics_l.size(Qt::TextSingleLine, lText);
+        int lTextRad = 30;
 
+        pPainter->drawText( lPtX - 0.5*sz_l.width(),
+                            lPtY + 0.99*sz_l.height(),lText);// ,Qt::AlignVCenter,sz_l.width(),sz_l.height(),lText);
+      }
     }
 
-    pPainter->drawPolygon(polygon);
+
+    if ((lPlotMap.Type == OBX_MAP_POLY) && (mDisplayMapPolygons == true))
+    {
+      pPainter->setPen(mColorMapPolygons);
+      QColor lFillColor = mColorMapPolygons;
+      lFillColor.setAlpha(100);
+      pPainter->setBrush(lFillColor);
+      pPainter->drawPolygon(polygon);
+    }
   }
 
 }
@@ -862,26 +814,26 @@ void ObelixPlotWidget::PaintControl()
   // Paint heading
   if ((mDisplayAircraft == true) || (mDisplayHeading == true))
   {
-      QPainter lHeadingPainter(mHeadingImg);
-      mHeadingImg->fill(0x00000000);
-      PaintHeadingFeatures(&lHeadingPainter);
-      lWidgetPainter.drawImage(0, 0, *mHeadingImg);
+    QPainter lHeadingPainter(mHeadingImg);
+    mHeadingImg->fill(0x00000000);
+    PaintHeadingFeatures(&lHeadingPainter);
+    lWidgetPainter.drawImage(0, 0, *mHeadingImg);
   }
 
   // Antenna
   if (mDisplayAntenna == true)
   {
-      if (mNorthUp == false)
-      {
-        lAzimuthOffset = -mLastHeadingDeg;
-      }
-      else
-      {
-          lAzimuthOffset = 0;
-      }
+    if (mNorthUp == false)
+    {
+      lAzimuthOffset = -mLastHeadingDeg;
+    }
+    else
+    {
+      lAzimuthOffset = 0;
+    }
 
     lWidgetPainter.setPen(mColorAntenna);
-    lWidgetPainter.drawLine(mXCtr, mYCtr, mXCtr+mPlotRad*sin((lAzimuthOffset+mLastAzimuthDeg)*DEG_TO_RAD), mYCtr-mPlotRad*cos((lAzimuthOffset+mLastAzimuthDeg)*DEG_TO_RAD));
+    lWidgetPainter.drawLine(mXCtr, mYCtr, mXCtr+mPlotRad*sin((lAzimuthOffset+mLastAzimuthDeg)*OTB::DEG_TO_RAD), mYCtr-mPlotRad*cos((lAzimuthOffset+mLastAzimuthDeg)*OTB::DEG_TO_RAD));
   }
 
   //

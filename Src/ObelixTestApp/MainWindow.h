@@ -5,6 +5,7 @@
 #include <QTimer>
 
 #include "ObelixUdpSimThread.h"
+#include "ObelixToolbox.h"
 
 
 
@@ -14,6 +15,8 @@ typedef struct _T_SimTrack
   double      Distance;
   double      Course;
   double      GroundSpeed;
+  double      Latitude;
+  double      Longitude;
   std::string CallSing;
 }T_SimTrack;
 

@@ -25,7 +25,8 @@ SOURCES +=  \
   ObelixUdpPlotWidget.cpp \
   ObelixUdpReaderThread.cpp \
   ObelixUdpSim.cpp \
-  ObelixUdpSimThread.cpp
+  ObelixUdpSimThread.cpp \
+  ObelixToolbox.cpp
 
 # ----------------------------------------------------------
 # HEADERS
@@ -38,4 +39,5 @@ HEADERS +=  \
   ObelixUdpReaderThread.h \
   ObelixUdpSim.h \
   ObelixUdpSimThread.h \
-  ObelixLibDef.h
+  ObelixLibDef.h \
+  ObelixToolbox.h
