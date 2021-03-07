@@ -108,6 +108,38 @@ void ObelixUdpSimThread::PushTracks(T_ObelixTrack *pTrackTable, uint pCount)
   }*/
 }
 
+
+void ObelixUdpSimThread::PushClouds(T_ObelixCloud *pCloudTable, uint pCount)
+{
+  // Loop on tracks
+  for (uint i=0; i<pCount; i++)
+  {
+    // Update
+    if (mCloudTable.contains(pCloudTable[i].Id) == true)
+    {
+      mCloudTable[pCloudTable[i].Id] = pCloudTable[i];
+    }
+    // Add
+    else
+    {
+      mCloudTable.insert(pCloudTable[i].Id, pCloudTable[i]);
+    }
+  }
+
+
+   QHash<uint16_t, T_ObelixCloud>::iterator lCloudIter;
+  for (lCloudIter = mCloudTable.begin(); lCloudIter != mCloudTable.end(); ++lCloudIter)
+  {
+    // Loop on nodes
+    for (int j=0; j<5; j++)
+    {
+      //qDebug("[%i]%f%f",lCloudIter.key(), lCloudIter.value().Nodes[0].Latitude, lCloudIter.value().Nodes[0].Longitude);
+    }
+    }
+
+
+}
+
 bool ObelixUdpSimThread::PushMapObject(uint16_t          pId,
                                        uint8_t           pType,
                                        T_ObelixMapPoint* pPointTable,
@@ -157,6 +189,8 @@ void ObelixUdpSimThread::run()
     mObelixUdpGene->SetUdpWriterMapParameters(mMapIp, mMapPort);
   mObelixUdpGene->SetVideoBeamParameters(mBeamNbLevel, mBeamNbCells);
   mObelixUdpGene->SetTrackTableRef(&mTrackTable);
+
+  mObelixUdpGene->SetCloudTableRef(&mCloudTable);
 
 
 

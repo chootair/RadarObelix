@@ -327,7 +327,7 @@ void ObelixPlotWidget::PaintVideoCells(QPainter *pPainter)
         {
           lWeatherColor = Qt::black;
         }
-        if (mFifoVideoPtr[i].CellValueTbl[lIdxCell-1] < 20)
+        else if (mFifoVideoPtr[i].CellValueTbl[lIdxCell-1] < 20)
         {
           lWeatherColor = Qt::cyan;
         }

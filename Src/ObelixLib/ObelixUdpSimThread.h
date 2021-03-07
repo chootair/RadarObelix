@@ -72,6 +72,7 @@ public:
      void RemoveTrack( uint16_t pTrackId);
     void PushTrack(T_ObelixTrack pTrack);
     void PushTracks(T_ObelixTrack* pTrackTable, uint pCount);
+    void PushClouds(T_ObelixCloud *pCloudTable, uint pCount);
 
      bool PushMapObject(uint16_t pId, uint8_t pType, T_ObelixMapPoint* pPointTable, uint pCount);
 
@@ -118,6 +119,8 @@ private:
 
 
   QHash<uint16_t, T_ObelixTrack> mTrackTable;
+
+   QHash<uint16_t, T_ObelixCloud> mCloudTable;
 
 
 

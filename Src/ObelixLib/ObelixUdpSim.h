@@ -7,6 +7,7 @@
 #include <QUdpSocket>
 
 #include "ObelixLibDef.h"
+#include "ObelixToolbox.h"
 #include "Obelix.h"
 
 
@@ -15,6 +16,20 @@ typedef struct _T_MapObject
   uint8_t                 Type;
   QList<T_ObelixMapPoint> Points;
 }T_MapObject;
+
+
+typedef struct _T_ObelixCloudNode
+{
+  double Latitude;
+  double Longitude;
+  double Intensity;
+}T_ObelixCloudNode;
+
+typedef struct _T_ObelixCloud
+{
+  uint16_t Id;
+  T_ObelixCloudNode Nodes[5];
+}T_ObelixCloud;
 
 
 
@@ -56,6 +71,8 @@ public:
 
   void SetTrackTableRef(QHash<uint16_t, T_ObelixTrack>* pTrackTable);
 
+  void SetCloudTableRef(QHash<uint16_t, T_ObelixCloud>* pCloudTbl);
+
   bool PushMapObject(uint16_t pId, uint8_t pType, T_ObelixMapPoint* pPointTable, uint pCount);
   void SetPlatformPosition(double pLatitude, double pLongitude);
 
@@ -96,6 +113,9 @@ private:
 
   //
   QHash<uint16_t, T_ObelixTrack>* mTrackTbl;
+
+  QHash<uint16_t, T_ObelixCloud>* mCloudTbl;
+
 
 
 

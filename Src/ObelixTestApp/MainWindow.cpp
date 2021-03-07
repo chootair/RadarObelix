@@ -65,9 +65,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
   mSimTable = nullptr;
+  mlCloudTable = nullptr;
 
 
-  BuildSimTrackTable();
+
 
 
 
@@ -93,7 +94,8 @@ MainWindow::MainWindow(QWidget *parent) :
  ui->sbxPlatformLat->setValue(40);
  ui->sbxPlatformLong->setValue(-1);
 
-
+ BuildSimTrackTable();
+ BuildSimCloudTable();
 
 }
 
@@ -185,6 +187,7 @@ void MainWindow::OnTimerTick()
 void MainWindow::OnSimTimerTick()
 {
   PushSimTrackTable();
+  PushSimCloudTable();
   PushSimMapTable();
 }
 
@@ -330,6 +333,41 @@ void MainWindow::on_pbxDispSim_clicked(bool checked)
 void MainWindow::on_pbxDispScope_clicked(bool checked)
 {
   ui->gbxScope->setVisible(checked);
+}
+
+
+#define CLOUD_COUNT 20
+
+void MainWindow::BuildSimCloudTable()
+{
+  if (mlCloudTable)
+  {
+    free (mlCloudTable);
+  }
+
+  //
+  double lPlatformLat  = ui->sbxPlatformLat->value();
+  double lPlatformLong = ui->sbxPlatformLong->value();
+
+
+
+      mlCloudTable = (T_ObelixCloud*)calloc(CLOUD_COUNT, sizeof(T_ObelixCloud));
+
+      //
+      for (int i=0; i<CLOUD_COUNT;  i++)
+      {
+        mlCloudTable[i].Id = i;
+
+        double lCloudLat  = lPlatformLat  + (-100.0 + rand()%200)/50.0;
+        double lCloudLong = lPlatformLong + (-100.0 + rand()%200)/50.0;
+
+          for (int j=0; j<5; j++)
+          {
+            mlCloudTable[i].Nodes[j].Latitude  = lCloudLat  +(-100 + rand()%200)/500.0;
+            mlCloudTable[i].Nodes[j].Longitude = lCloudLong +(-100 + rand()%200)/500.0;
+            mlCloudTable[i].Nodes[j].Intensity = (rand()%100)/700.0;
+          }
+      }
 }
 
 void MainWindow::BuildSimTrackTable()
@@ -487,6 +525,17 @@ void MainWindow::PushSimTrackTable()
 
   mObelixSimThread->PushTracks(mlTrackTable, mSimTableSize);
 }
+
+void MainWindow::PushSimCloudTable()
+{
+
+
+    mObelixSimThread->PushClouds(mlCloudTable, CLOUD_COUNT);
+}
+
+
+
+
 
 void MainWindow::PushSimMapTable()
 {

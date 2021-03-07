@@ -111,7 +111,9 @@ private slots:
 
 private:
   void BuildSimTrackTable();
+  void BuildSimCloudTable();
   void PushSimTrackTable();
+  void PushSimCloudTable();
   void PushSimMapTable();
 private:
   Ui::MainWindow *ui;
@@ -121,6 +123,7 @@ private:
    QTimer* mSimTimer;
 
    T_ObelixTrack* mlTrackTable;
+   T_ObelixCloud* mlCloudTable;
    T_SimTrack* mSimTable;
    int mSimTableSize;
 };

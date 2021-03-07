@@ -18,6 +18,7 @@ ObelixUdpSim::ObelixUdpSim(QObject *parent) : QObject(parent)
 
   //
   mTrackTbl = nullptr;
+  mCloudTbl = nullptr;
 
   //
   mPtfLatitude  = 0;
@@ -192,6 +193,11 @@ void ObelixUdpSim::SetTrackTableRef(QHash<uint16_t, T_ObelixTrack> *pTrackTable)
   mTrackTbl = pTrackTable;
 }
 
+void ObelixUdpSim::SetCloudTableRef(QHash<uint16_t, T_ObelixCloud> *pCloudTbl)
+{
+  mCloudTbl = pCloudTbl;
+}
+
 bool ObelixUdpSim::PushMapObject(uint16_t pId, uint8_t pType, T_ObelixMapPoint *pPointTable, uint pCount)
 {
   // New map object
@@ -226,6 +232,7 @@ void ObelixUdpSim::SetPlatformPosition(double pLatitude, double pLongitude)
 void ObelixUdpSim::BuildVideoBeam(double pHeading, double pStartAzimut, double pAzimuthWidth, double pStartRange, double pRangeWidth, int pVideoMode)
 {
    QHash<uint16_t, T_ObelixTrack>::iterator lTrackIter;
+   QHash<uint16_t, T_ObelixCloud>::iterator lCloudIter;
   int lIdxBeam = 0;
 
   // Loop on beam levels
@@ -268,6 +275,16 @@ void ObelixUdpSim::BuildVideoBeam(double pHeading, double pStartAzimut, double p
         // Cell range ratio
         double lCellRgRto = (mBeam[lIdxBeam].StartRgNm+(lIdxCell+0.5)*mBeam[lIdxBeam].CellWidthNm-pStartRange)/pRangeWidth;
 
+        // Cell postion R/Theta
+        double lCellAzDeg = mBeam[lIdxBeam].StartAzDeg + 0.5 *lSubBeamAzWidthDeg;
+        double lCellRgNm  = mBeam[lIdxBeam].StartRgNm+(lIdxCell+0.5)*mBeam[lIdxBeam].CellWidthNm;
+
+        // Cell position Lat/Long
+        double lCellLat = 0;
+        double lCellLon = 0;
+        OTB::AzDstToLatLon(mPtfLatitude, mPtfLongitude, lCellAzDeg, lCellRgNm*OTB::NM_TO_M, lCellLat, lCellLon);
+
+
         // Search
         if (pVideoMode == OBX_VIDEO_SEARCH)
         {
@@ -300,8 +317,36 @@ void ObelixUdpSim::BuildVideoBeam(double pHeading, double pStartAzimut, double p
         // Meteo mode
         else if (pVideoMode == OBX_VIDEO_WEATHER)
         {
+          // Loop on coulds
+          for (lCloudIter = mCloudTbl->begin(); lCloudIter != mCloudTbl->end(); ++lCloudIter)
+          {
+            // Loop on nodes
+            for (int j=0; j<5; j++)
+            {
+              // Distance of the cell to the cloud
+              double lNodeAzimuth  = 0;
+              double lNodeDistance = 0;
+              OTB::ComputeAzimuthDistance(lCellLat, lCellLon, lCloudIter.value().Nodes[j].Latitude, lCloudIter.value().Nodes[j].Longitude,lNodeAzimuth,lNodeDistance);
+
+
+             lNodeDistance = (lNodeDistance / OTB::NM_TO_M);
+
+            //int    lLvl = 255 * 0.33 * lCloudIter.value().Nodes[j].Intensity/lNodeDistance;
+            double    lLvl = 100.0 * qMax(0.0, (30.0-lNodeDistance)/30.0)*lCloudIter.value().Nodes[j].Intensity;
+            int  lILvl = lLvl;
+
+            //qDebug("------[%i][%i]%f-%f",lCloudIter.key(), j, lCellLat, lCellLon);
+            //qDebug("------[%i][%i]%f-%f",lCloudIter.key(), j, lCloudIter.value().Nodes[j].Latitude, lCloudIter.value().Nodes[j].Longitude);
+            //qDebug("------[%i]%f-%f",j,lNodeAzimuth,lNodeDistance);
+            //qDebug("------");
+
+            //
+            mBeam[lIdxBeam].CellValueTbl[lIdxCell]= qMin(100, mBeam[lIdxBeam].CellValueTbl[lIdxCell]+lILvl);
+            }
+          }
+
           /// \todo
-          mBeam[lIdxBeam].CellValueTbl[lIdxCell]=rand()%128;
+          ///mBeam[lIdxBeam].CellValueTbl[lIdxCell]=rand()%128;
         }
         // Random mode
         else if (pVideoMode == OBX_VIDEO_TEST)
