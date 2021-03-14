@@ -21,70 +21,83 @@ public:
   inline void SetTimerPeridod(int pTimerPeriod){mTimerPeriod = pTimerPeriod;}
   inline int TimerPeridod() const {return mTimerPeriod;}
 
-    void SetSourcePostion(double pLatitude, double pLongitude);
+  void SetSourcePostion(double pLatitude, double pLongitude);
 
-    inline void SetAntennaRpm(uint pAntennaRpm) {mAntennaRpm = pAntennaRpm;}
-    inline uint AntennaRpm() const {return mAntennaRpm;}
+  inline void SetAntennaRpm(uint pAntennaRpm) {mAntennaRpm = pAntennaRpm;}
+  inline uint AntennaRpm() const {return mAntennaRpm;}
 
-    inline void SetBeamWidth(double pBeamWidth) {mBeamWidth = pBeamWidth;}
-    inline double BeamWidth() const {return mBeamWidth;}
-
-
-
-    inline bool   SectorScan           () const{return mSectorScan;}
-    inline bool   SectorScanPlatformRef() const{return mSectorPlatfromRef;}
-    inline double SectorScanAzimuth     () const{return mSectorScanAzimuthDeg;}
-    inline double SectorScanWidth      () const{return mSectorScanWidthDeg;}
-
-    inline void SetSectorScan           (bool   pSectorScan)          {mSectorScan = pSectorScan;}
-    inline void SetSectorScanPlatformRef(bool   pSectorPlatfromRef)   {mSectorPlatfromRef = pSectorPlatfromRef;}
-    inline void SetSectorScanAzimuth     (double pSectorScanAzimuthDeg) {mSectorScanAzimuthDeg = pSectorScanAzimuthDeg;}
-    inline void SetSectorScanWidth      (double pSectorScanWidthDeg)  {mSectorScanWidthDeg = pSectorScanWidthDeg;}
+  inline void SetBeamWidth(double pBeamWidth) {mBeamWidth = pBeamWidth;}
+  inline double BeamWidth() const {return mBeamWidth;}
 
 
 
-    void SetPlatformPosition(double pLatitude, double pLongitude);
+  inline bool   SectorScan           () const{return mSectorScan;}
+  inline bool   SectorScanPlatformRef() const{return mSectorPlatfromRef;}
+  inline double SectorScanAzimuth     () const{return mSectorScanAzimuthDeg;}
+  inline double SectorScanWidth      () const{return mSectorScanWidthDeg;}
 
-    inline void SetRange(double pRange) {mRange = pRange;}
-    inline double Range() const {return mRange;}
-
-    inline void SetVideoMode(uint pVal) {mVideoMode = pVal;}
-    inline uint VideoMode() const {return mVideoMode;}
-
-
-
-    inline void SetPlatformHeading(double_t pVal) {mPlatformHeading = pVal;}
-    inline double PlatformHeading() const {return mPlatformHeading;}
-
-    inline void SetAntennaInverseRotate(bool pVal) {mAntennaInverseRotate = pVal;}
-    inline bool AntennaInverseRotate() const {return mAntennaInverseRotate;}
-
-
-    void SetVideoIntensity(double pVal);
-    double VideoIntensity();
-
-
-    void SetVideoNoise(double pVal);
-    double VideoNoise();
+  inline void SetSectorScan           (bool   pSectorScan)          {mSectorScan = pSectorScan;}
+  inline void SetSectorScanPlatformRef(bool   pSectorPlatfromRef)   {mSectorPlatfromRef = pSectorPlatfromRef;}
+  inline void SetSectorScanAzimuth     (double pSectorScanAzimuthDeg) {mSectorScanAzimuthDeg = pSectorScanAzimuthDeg;}
+  inline void SetSectorScanWidth      (double pSectorScanWidthDeg)  {mSectorScanWidthDeg = pSectorScanWidthDeg;}
 
 
 
-     void RemoveTrack( uint16_t pTrackId);
-    void PushTrack(T_ObelixTrack pTrack);
-    void PushTracks(T_ObelixTrack* pTrackTable, uint pCount);
-    void PushClouds(T_ObelixCloud *pCloudTable, uint pCount);
+  void SetPlatformPosition(double pLatitude, double pLongitude);
 
-     bool PushMapObject(uint16_t pId, uint8_t pType, T_ObelixMapPoint* pPointTable, uint pCount);
+  inline void SetRange(double pRange) {mRange = pRange;}
+  inline double Range() const {return mRange;}
 
-
-
-    void PushMapPlolygon(T_ObelixMapPoint* pPointTable, uint pCount);
-    void PushMapPoints(T_ObelixMapPoint* pPointTable, uint pCount);
-    void PushMapPattern(T_ObelixMapPoint* pPointTable, uint pCount);
+  inline void SetVideoMode(uint pVal) {mVideoMode = pVal;}
+  inline uint VideoMode() const {return mVideoMode;}
 
 
 
-    void AskForStop();
+  inline void SetPlatformHeading(double_t pVal) {mPlatformHeading = pVal;}
+  inline double PlatformHeading() const {return mPlatformHeading;}
+
+  inline void SetAntennaInverseRotate(bool pVal) {mAntennaInverseRotate = pVal;}
+  inline bool AntennaInverseRotate() const {return mAntennaInverseRotate;}
+
+
+  void SetVideoIntensity(double pVal);
+  double VideoIntensity();
+
+
+  void SetVideoNoise(double pVal);
+  double VideoNoise();
+
+  void SetVideoAzimutGapCorrectionRatio(double pVal);
+  double VideoAzimutGapCorrectionRatio();
+
+  void SetVideoAzimutGapLevelRatio(double pVal);
+  double VideoAzimutGapLevelRatio();
+
+  void SetVideoRangeGapLevelRatio(double pVal);
+  double VideoRangeGapLevelRatio();
+
+
+
+
+
+
+
+  void RemoveTrack( uint16_t pTrackId);
+  void PushTrack(T_ObelixTrack pTrack);
+  void PushTracks(T_ObelixTrack* pTrackTable, uint pCount);
+  void PushClouds(T_ObelixCloud *pCloudTable, uint pCount);
+
+  bool PushMapObject(uint16_t pId, uint8_t pType, T_ObelixMapPoint* pPointTable, uint pCount);
+
+
+
+  void PushMapPlolygon(T_ObelixMapPoint* pPointTable, uint pCount);
+  void PushMapPoints(T_ObelixMapPoint* pPointTable, uint pCount);
+  void PushMapPattern(T_ObelixMapPoint* pPointTable, uint pCount);
+
+
+
+  void AskForStop();
 
 private:
   void run();
@@ -120,7 +133,7 @@ private:
 
   QHash<uint16_t, T_ObelixTrack> mTrackTable;
 
-   QHash<uint16_t, T_ObelixCloud> mCloudTable;
+  QHash<uint16_t, T_ObelixCloud> mCloudTable;
 
 
 

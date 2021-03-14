@@ -80,6 +80,63 @@ double ObelixUdpSimThread::VideoNoise()
   return mVideoNoise;
 }
 
+void ObelixUdpSimThread::SetVideoAzimutGapCorrectionRatio(double pVal)
+{
+  if (mObelixUdpGene)
+  {
+    mObelixUdpGene->SetVideoAzimutGapCorrectionRatio(pVal);
+  }
+  mVideoAzGapCorrectionRto = pVal;
+}
+
+double ObelixUdpSimThread::VideoAzimutGapCorrectionRatio()
+{
+  if (mObelixUdpGene)
+  {
+    mVideoAzGapCorrectionRto = mObelixUdpGene->VideoAzimutGapCorrectionRatio();
+  }
+
+  return mVideoAzGapCorrectionRto;
+}
+
+void ObelixUdpSimThread::SetVideoAzimutGapLevelRatio(double pVal)
+{
+  if (mObelixUdpGene)
+  {
+    mObelixUdpGene->SetVideoAzimutGapLevelRatio(pVal);
+  }
+  mVideoAzGapLvlRto = pVal;
+}
+
+double ObelixUdpSimThread::VideoAzimutGapLevelRatio()
+{
+  if (mObelixUdpGene)
+  {
+    mVideoAzGapLvlRto = mObelixUdpGene->VideoAzimutGapLevelRatio();
+  }
+
+  return mVideoAzGapLvlRto;
+}
+
+void ObelixUdpSimThread::SetVideoRangeGapLevelRatio(double pVal)
+{
+  if (mObelixUdpGene)
+  {
+    mObelixUdpGene->SetVideoRangeGapLevelRatio(pVal);
+  }
+  mVideoRgGapLvlRto = pVal;
+}
+
+double ObelixUdpSimThread::VideoRangeGapLevelRatio()
+{
+  if (mObelixUdpGene)
+  {
+    mVideoRgGapLvlRto = mObelixUdpGene->VideoRangeGapLevelRatio();
+  }
+
+  return mVideoRgGapLvlRto;
+}
+
 void ObelixUdpSimThread::PushTracks(T_ObelixTrack *pTrackTable, uint pCount)
 {
   // Loop on tracks

@@ -33,6 +33,9 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->sbxIntensty->setValue(mObelixSimThread->VideoIntensity());
   ui->sbxSimNoise->setValue(mObelixSimThread->VideoNoise());
   ui->sbxPlatformHeading->setValue(mObelixSimThread->PlatformHeading());
+  ui->sbxAzGapRto->setValue(mObelixSimThread->VideoAzimutGapLevelRatio());
+  ui->sbxAzCorrectionGapRto->setValue(mObelixSimThread->VideoAzimutGapCorrectionRatio());
+  ui->sbxRangeGapRto->setValue(mObelixSimThread->VideoRangeGapLevelRatio());
 
   ui->ckxSectorScan->setChecked(mObelixSimThread->SectorScan());
   ui->ckxSectorScanPlatform->setChecked(mObelixSimThread->SectorScanPlatformRef());
@@ -87,15 +90,15 @@ MainWindow::MainWindow(QWidget *parent) :
   connect(ui->pbxColorCompas, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
   connect(ui->pbxColorTrack, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
   connect(ui->pbxColorVideo, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
- connect(ui->pbxColorAircraft, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
- connect(ui->pbxColorHeading, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
+  connect(ui->pbxColorAircraft, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
+  connect(ui->pbxColorHeading, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
 
 
- ui->sbxPlatformLat->setValue(40);
- ui->sbxPlatformLong->setValue(-1);
+  ui->sbxPlatformLat->setValue(40);
+  ui->sbxPlatformLong->setValue(-1);
 
- BuildSimTrackTable();
- BuildSimCloudTable();
+  BuildSimTrackTable();
+  BuildSimCloudTable();
 
 }
 
@@ -260,9 +263,9 @@ void MainWindow::on_ckxDispHeading_stateChanged(int arg1)
 
 void MainWindow::on_ckxNorthUp_stateChanged(int arg1)
 {
-    Q_UNUSED(arg1);
-    ui->olxPlot->SetNorthUp(ui->ckxNorthUp->isChecked());
-    ui->olxPlot->RefreshScope();
+  Q_UNUSED(arg1);
+  ui->olxPlot->SetNorthUp(ui->ckxNorthUp->isChecked());
+  ui->olxPlot->RefreshScope();
 }
 
 void MainWindow::on_ckxDispVideo_stateChanged(int arg1)
@@ -311,7 +314,7 @@ void MainWindow::on_sbxRange_valueChanged(int arg1)
 
 void MainWindow::on_sbxPlatformHeading_valueChanged(double arg1)
 {
-    mObelixSimThread->SetPlatformHeading(arg1);
+  mObelixSimThread->SetPlatformHeading(arg1);
 }
 
 
@@ -351,23 +354,23 @@ void MainWindow::BuildSimCloudTable()
 
 
 
-      mlCloudTable = (T_ObelixCloud*)calloc(CLOUD_COUNT, sizeof(T_ObelixCloud));
+  mlCloudTable = (T_ObelixCloud*)calloc(CLOUD_COUNT, sizeof(T_ObelixCloud));
 
-      //
-      for (int i=0; i<CLOUD_COUNT;  i++)
-      {
-        mlCloudTable[i].Id = i;
+  //
+  for (int i=0; i<CLOUD_COUNT;  i++)
+  {
+    mlCloudTable[i].Id = i;
 
-        double lCloudLat  = lPlatformLat  + (-100.0 + rand()%200)/50.0;
-        double lCloudLong = lPlatformLong + (-100.0 + rand()%200)/50.0;
+    double lCloudLat  = lPlatformLat  + (-100.0 + rand()%200)/50.0;
+    double lCloudLong = lPlatformLong + (-100.0 + rand()%200)/50.0;
 
-          for (int j=0; j<5; j++)
-          {
-            mlCloudTable[i].Nodes[j].Latitude  = lCloudLat  +(-100 + rand()%200)/500.0;
-            mlCloudTable[i].Nodes[j].Longitude = lCloudLong +(-100 + rand()%200)/500.0;
-            mlCloudTable[i].Nodes[j].Intensity = (rand()%100)/700.0;
-          }
-      }
+    for (int j=0; j<5; j++)
+    {
+      mlCloudTable[i].Nodes[j].Latitude  = lCloudLat  +(-100 + rand()%200)/500.0;
+      mlCloudTable[i].Nodes[j].Longitude = lCloudLong +(-100 + rand()%200)/500.0;
+      mlCloudTable[i].Nodes[j].Intensity = (rand()%100)/700.0;
+    }
+  }
 }
 
 void MainWindow::BuildSimTrackTable()
@@ -530,7 +533,7 @@ void MainWindow::PushSimCloudTable()
 {
 
 
-    mObelixSimThread->PushClouds(mlCloudTable, CLOUD_COUNT);
+  mObelixSimThread->PushClouds(mlCloudTable, CLOUD_COUNT);
 }
 
 
@@ -570,18 +573,18 @@ void MainWindow::PushSimMapTable()
   sprintf(lSinglePointTbl[4].Label, "WNW");
 
 
-   mObelixSimThread->PushMapObject(0,OBX_MAP_SINGLE,lSinglePointTbl,5);
+  mObelixSimThread->PushMapObject(0,OBX_MAP_SINGLE,lSinglePointTbl,5);
 
 
 
-   int lPolySize = 10;
-   T_ObelixMapPoint lPolyPointTbl[10];
-   for (int i=0; i<lPolySize; i++)
-   {
-     lPolyPointTbl[i].Latitude   = (40.0 + (rand()%100)*0.01)/OBX_TRK_LATLONG_LSB;
-     lPolyPointTbl[i].Longitude = (-2.0 + (rand()%100)*0.01)/OBX_TRK_LATLONG_LSB;
-   }
-   mObelixSimThread->PushMapObject(1,OBX_MAP_POLY,lPolyPointTbl,lPolySize);
+  int lPolySize = 10;
+  T_ObelixMapPoint lPolyPointTbl[10];
+  for (int i=0; i<lPolySize; i++)
+  {
+    lPolyPointTbl[i].Latitude   = (40.0 + (rand()%100)*0.01)/OBX_TRK_LATLONG_LSB;
+    lPolyPointTbl[i].Longitude = (-2.0 + (rand()%100)*0.01)/OBX_TRK_LATLONG_LSB;
+  }
+  mObelixSimThread->PushMapObject(1,OBX_MAP_POLY,lPolyPointTbl,lPolySize);
 
 
 
@@ -623,21 +626,36 @@ void MainWindow::on_pbxStopSim_clicked()
 
 void MainWindow::on_ckxSectorScan_clicked(bool checked)
 {
-    mObelixSimThread->SetSectorScan(checked);
+  mObelixSimThread->SetSectorScan(checked);
 }
 
 void MainWindow::on_sbxSectorScanAzimuth_valueChanged(double arg1)
 {
-    mObelixSimThread->SetSectorScanAzimuth(arg1);
+  mObelixSimThread->SetSectorScanAzimuth(arg1);
 }
 
 
 void MainWindow::on_sbxSectorScanWitdh_valueChanged(double arg1)
 {
-    mObelixSimThread->SetSectorScanWidth(arg1);
+  mObelixSimThread->SetSectorScanWidth(arg1);
 }
 
 void MainWindow::on_ckxSectorScanPlatform_clicked(bool checked)
 {
-    mObelixSimThread->SetSectorScanPlatformRef(checked);
+  mObelixSimThread->SetSectorScanPlatformRef(checked);
+}
+
+void MainWindow::on_sbxAzGapRto_valueChanged(double arg1)
+{
+  mObelixSimThread->SetVideoAzimutGapLevelRatio(arg1);
+}
+
+void MainWindow::on_sbxAzCorrectionGapRto_valueChanged(double arg1)
+{
+  mObelixSimThread->SetVideoAzimutGapCorrectionRatio(arg1);
+}
+
+void MainWindow::on_sbxRangeGapRto_valueChanged(double arg1)
+{
+  mObelixSimThread->SetVideoRangeGapLevelRatio(arg1);
 }

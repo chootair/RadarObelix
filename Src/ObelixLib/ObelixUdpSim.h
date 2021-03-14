@@ -5,6 +5,7 @@
 
 #include <QObject>
 #include <QUdpSocket>
+#include <QTime>
 
 #include "ObelixLibDef.h"
 #include "ObelixToolbox.h"
@@ -49,17 +50,17 @@ public:
   void SetVideoBeamParameters(int pNbLevel, int pNbCells);
 
 
-   inline double VideoAzimutGapCorrectionRatio() const {return mVideoAzGapCorrectionRto;}
-   inline double VideoAzimutGapLevelRatio() const {return mVideoAzGapLvlRto;}
-   inline double VideoRangeGapLevelRatio() const {return mVideoRgGapLvlRto;}
-   inline double VideoIntensity() const {return mVideoIntensity;}
-   inline double VideoNoise() const {return mVideoNoise;}
+  inline double VideoAzimutGapCorrectionRatio() const {return mVideoAzGapCorrectionRto;}
+  inline double VideoAzimutGapLevelRatio() const {return mVideoAzGapLvlRto;}
+  inline double VideoRangeGapLevelRatio() const {return mVideoRgGapLvlRto;}
+  inline double VideoIntensity() const {return mVideoIntensity;}
+  inline double VideoNoise() const {return mVideoNoise;}
 
-   inline void SetVideoAzimutGapCorrectionRatio(double pVal) {mVideoAzGapCorrectionRto = pVal;}
-   inline void SetVideoAzimutGapLevelRatio(double pVal) {mVideoAzGapLvlRto = pVal;}
-   inline void SetVideoRangeGapLevelRatio(double pVal) {mVideoRgGapLvlRto = pVal;}
-   inline void SetVideoIntensity(double pVal) {mVideoIntensity = pVal;}
-   inline void SetVideoNoise(double pVal) {mVideoNoise = pVal;}
+  inline void SetVideoAzimutGapCorrectionRatio(double pVal) {mVideoAzGapCorrectionRto = pVal;}
+  inline void SetVideoAzimutGapLevelRatio(double pVal) {mVideoAzGapLvlRto = pVal;}
+  inline void SetVideoRangeGapLevelRatio(double pVal) {mVideoRgGapLvlRto = pVal;}
+  inline void SetVideoIntensity(double pVal) {mVideoIntensity = pVal;}
+  inline void SetVideoNoise(double pVal) {mVideoNoise = pVal;}
 
 
 
@@ -83,7 +84,7 @@ public slots:
 
 private:
 
- void BuildVideoBeam(double pHeading, double pStartAzimut, double pAzimuthWidth, double pStartRange, double pRangeWidth, int pVideoMode);
+  void BuildVideoBeam(double pHeading, double pStartAzimut, double pAzimuthWidth, double pStartRange, double pRangeWidth, int pVideoMode);
 
 private:
   // Video beam parameters

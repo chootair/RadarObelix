@@ -17,9 +17,10 @@
 static const uint16_t OBX_CELL_TBL_CNT = 200;
 
 /// \defgroup gVideoMode Video Mode
-static const uint16_t OBX_VIDEO_SEARCH  = 0;
-static const uint16_t OBX_VIDEO_WEATHER = 1;
-static const uint16_t OBX_VIDEO_TEST    = 2;
+static const uint16_t OBX_VIDEO_SEARCH     = 0;
+static const uint16_t OBX_VIDEO_WEATHER    = 1;
+static const uint16_t OBX_VIDEO_TEST_CLOCK = 2;
+static const uint16_t OBX_VIDEO_TEST       = 3;
 
 
 /// \brief Obelix video message

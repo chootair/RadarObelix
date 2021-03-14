@@ -233,7 +233,8 @@ void ObelixUdpSim::BuildVideoBeam(double pHeading, double pStartAzimut, double p
 {
    QHash<uint16_t, T_ObelixTrack>::iterator lTrackIter;
    QHash<uint16_t, T_ObelixCloud>::iterator lCloudIter;
-  int lIdxBeam = 0;
+   QTime lNow     = QTime::currentTime();
+   int   lIdxBeam = 0;
 
   // Loop on beam levels
   for (int lIdxLvl=0; lIdxLvl<mBeamNbLevel; lIdxLvl++)
@@ -348,7 +349,57 @@ void ObelixUdpSim::BuildVideoBeam(double pHeading, double pStartAzimut, double p
           /// \todo
           ///mBeam[lIdxBeam].CellValueTbl[lIdxCell]=rand()%128;
         }
-        // Random mode
+        // Test clock mode
+        else if (pVideoMode == OBX_VIDEO_TEST_CLOCK)
+        {
+          // Second angle
+          {
+            int lSecondAngleDeg = lNow.second()*6;
+            double lAzGapDeg = fabs(lCellAzDeg - lSecondAngleDeg);
+            lAzGapDeg = lAzGapDeg*(1-(1-lCellRgRto)*mVideoAzGapCorrectionRto);
+            double lAzLvl = qBound(0.0, 1 - mVideoAzGapLvlRto * lAzGapDeg, 1.0);
+            int    lLvl = 255 * mVideoIntensity * lAzLvl;
+
+            if (lCellRgRto < 0.9)
+            {
+              mBeam[lIdxBeam].CellValueTbl[lIdxCell]= qMin(255, mBeam[lIdxBeam].CellValueTbl[lIdxCell]+lLvl);
+            }
+          }
+
+          // Minute angle
+          {
+            int lMinuteAngleDeg = lNow.minute()*6;
+            double lAzGapDeg = fabs(lCellAzDeg - lMinuteAngleDeg);
+            lAzGapDeg = lAzGapDeg*(1-(1-lCellRgRto)*mVideoAzGapCorrectionRto);
+            double lAzLvl = qBound(0.0, 1 - mVideoAzGapLvlRto * lAzGapDeg, 1.0);
+            int    lLvl = 255 * mVideoIntensity * lAzLvl;
+
+            if (lCellRgRto < 0.6)
+            {
+              mBeam[lIdxBeam].CellValueTbl[lIdxCell]= qMin(255, mBeam[lIdxBeam].CellValueTbl[lIdxCell]+lLvl);
+            }
+          }
+
+          // Hour angle
+          {
+            int lHourAngleDeg   = (lNow.hour()%12)*30;
+            double lAzGapDeg = fabs(lCellAzDeg - lHourAngleDeg);
+            lAzGapDeg = lAzGapDeg*(1-(1-lCellRgRto)*mVideoAzGapCorrectionRto);
+            double lAzLvl = qBound(0.0, 1 - mVideoAzGapLvlRto * lAzGapDeg, 1.0);
+            int    lLvl = 255 * mVideoIntensity * lAzLvl;
+
+            if (lCellRgRto < 0.3)
+            {
+              mBeam[lIdxBeam].CellValueTbl[lIdxCell]= qMin(255, mBeam[lIdxBeam].CellValueTbl[lIdxCell]+lLvl);
+            }
+          }
+
+
+
+
+
+        }
+        // Test Random mode
         else if (pVideoMode == OBX_VIDEO_TEST)
         {
           if (lIdxCell == 0)

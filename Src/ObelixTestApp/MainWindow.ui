@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1137</width>
+    <width>1171</width>
     <height>1002</height>
    </rect>
   </property>
@@ -267,7 +267,7 @@
           <item row="6" column="1">
            <widget class="QDoubleSpinBox" name="sbxRangeGapRto">
             <property name="enabled">
-             <bool>false</bool>
+             <bool>true</bool>
             </property>
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -283,13 +283,13 @@
           <item row="4" column="1">
            <widget class="QDoubleSpinBox" name="sbxAzGapRto">
             <property name="enabled">
-             <bool>false</bool>
+             <bool>true</bool>
             </property>
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
             <property name="maximum">
-             <double>99.000000000000000</double>
+             <double>999.000000000000000</double>
             </property>
             <property name="singleStep">
              <double>1.000000000000000</double>
@@ -299,13 +299,13 @@
           <item row="5" column="1">
            <widget class="QDoubleSpinBox" name="sbxAzCorrectionGapRto">
             <property name="enabled">
-             <bool>false</bool>
+             <bool>true</bool>
             </property>
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
             <property name="maximum">
-             <double>99.000000000000000</double>
+             <double>999.000000000000000</double>
             </property>
             <property name="singleStep">
              <double>1.000000000000000</double>
@@ -316,20 +316,6 @@
            <widget class="QLabel" name="label_14">
             <property name="text">
              <string>Mode :</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="0">
-           <widget class="QLabel" name="label_13">
-            <property name="text">
-             <string>Range Gap Ratio:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="label_10">
-            <property name="text">
-             <string>Azimut Gap Ratio:</string>
             </property>
            </widget>
           </item>
@@ -347,9 +333,28 @@
             </item>
             <item>
              <property name="text">
+              <string>Test Clock</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
               <string>Test</string>
              </property>
             </item>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="label_13">
+            <property name="text">
+             <string>Range Gap Ratio:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_10">
+            <property name="text">
+             <string>Azimut Gap Ratio:</string>
+            </property>
            </widget>
           </item>
           <item row="5" column="0">
@@ -389,6 +394,41 @@
             </property>
             <property name="value">
              <double>0.010000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QLabel" name="label_36">
+            <property name="text">
+             <string>[0 - 1]</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="label_37">
+            <property name="text">
+             <string>[0 - 1]</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2">
+           <widget class="QLabel" name="label_38">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="2">
+           <widget class="QLabel" name="label_39">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="2">
+           <widget class="QLabel" name="label_40">
+            <property name="text">
+             <string>TextLabel</string>
             </property>
            </widget>
           </item>

@@ -371,6 +371,13 @@ void ObelixPlotWidget::PaintVideoCells(QPainter *pPainter)
         //
         lBrush.setColor(lWeatherColor);
       }
+      else if (mFifoVideoPtr[i].VideoMode == OBX_VIDEO_TEST_CLOCK)
+      {
+        double lFactor = mFifoVideoPtr[i].CellValueTbl[lIdxCell-1]/255.0;
+        lBrush.setColor(QColor(lFactor*mColorVideo.red(),
+                               lFactor*mColorVideo.green(),
+                               lFactor*mColorVideo.blue()));
+      }
       else if (mFifoVideoPtr[i].VideoMode == OBX_VIDEO_TEST)
       {
         QColor lTestColor = Qt::black;

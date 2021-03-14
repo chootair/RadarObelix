@@ -109,6 +109,12 @@ private slots:
 
   void on_ckxSectorScanPlatform_clicked(bool checked);
 
+  void on_sbxAzGapRto_valueChanged(double arg1);
+
+  void on_sbxAzCorrectionGapRto_valueChanged(double arg1);
+
+  void on_sbxRangeGapRto_valueChanged(double arg1);
+
 private:
   void BuildSimTrackTable();
   void BuildSimCloudTable();
