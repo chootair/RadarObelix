@@ -12,7 +12,6 @@ ObelixUdpSim::ObelixUdpSim(QObject *parent) : QObject(parent)
   mVideoAzGapCorrectionRto = 1;
   mVideoAzGapLvlRto        = 2;
   mVideoRgGapLvlRto        = 100;
-  mVideoIntensity          = 1;
   mVideoNoise              = 0;
 
 
@@ -309,7 +308,7 @@ void ObelixUdpSim::BuildVideoBeam(double pHeading, double pStartAzimut, double p
             // Intens
             double lAzLvl = qBound(0.0, 1 - mVideoAzGapLvlRto * lAzGapDeg, 1.0);
             double lRgLvl = qBound(0.0, 1 - mVideoRgGapLvlRto * lRgGapNm, 1.0);
-            int    lLvl = 255 * mVideoIntensity * lAzLvl * lRgLvl;
+            int    lLvl = 255 * lAzLvl * lRgLvl;
 
             //
             mBeam[lIdxBeam].CellValueTbl[lIdxCell]= qMin(255, mBeam[lIdxBeam].CellValueTbl[lIdxCell]+lLvl);
@@ -358,7 +357,7 @@ void ObelixUdpSim::BuildVideoBeam(double pHeading, double pStartAzimut, double p
             double lAzGapDeg = fabs(lCellAzDeg - lSecondAngleDeg);
             lAzGapDeg = lAzGapDeg*(1-(1-lCellRgRto)*mVideoAzGapCorrectionRto);
             double lAzLvl = qBound(0.0, 1 - mVideoAzGapLvlRto * lAzGapDeg, 1.0);
-            int    lLvl = 255 * mVideoIntensity * lAzLvl;
+            int    lLvl = 255 * lAzLvl;
 
             if (lCellRgRto < 0.9)
             {
@@ -372,7 +371,7 @@ void ObelixUdpSim::BuildVideoBeam(double pHeading, double pStartAzimut, double p
             double lAzGapDeg = fabs(lCellAzDeg - lMinuteAngleDeg);
             lAzGapDeg = lAzGapDeg*(1-(1-lCellRgRto)*mVideoAzGapCorrectionRto);
             double lAzLvl = qBound(0.0, 1 - mVideoAzGapLvlRto * lAzGapDeg, 1.0);
-            int    lLvl = 255 * mVideoIntensity * lAzLvl;
+            int    lLvl = 255 * lAzLvl;
 
             if (lCellRgRto < 0.6)
             {
@@ -386,7 +385,7 @@ void ObelixUdpSim::BuildVideoBeam(double pHeading, double pStartAzimut, double p
             double lAzGapDeg = fabs(lCellAzDeg - lHourAngleDeg);
             lAzGapDeg = lAzGapDeg*(1-(1-lCellRgRto)*mVideoAzGapCorrectionRto);
             double lAzLvl = qBound(0.0, 1 - mVideoAzGapLvlRto * lAzGapDeg, 1.0);
-            int    lLvl = 255 * mVideoIntensity * lAzLvl;
+            int    lLvl = 255 * lAzLvl;
 
             if (lCellRgRto < 0.3)
             {

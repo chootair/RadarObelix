@@ -14,20 +14,20 @@
 
 #include <cstdint>
 
-static const uint16_t OBX_CELL_TBL_CNT = 200;
+static const uint16_t OBX_CELL_TBL_CNT = 200; ///< Maximum number of cells in a video message
 
 /// \defgroup gVideoMode Video Mode
-static const uint16_t OBX_VIDEO_SEARCH     = 0;
-static const uint16_t OBX_VIDEO_WEATHER    = 1;
-static const uint16_t OBX_VIDEO_TEST_CLOCK = 2;
-static const uint16_t OBX_VIDEO_TEST       = 3;
+static const uint16_t OBX_VIDEO_SEARCH     = 0; ///< Search mode
+static const uint16_t OBX_VIDEO_WEATHER    = 1; ///< Weather mode
+static const uint16_t OBX_VIDEO_TEST_CLOCK = 2; ///< Test clock mode
+static const uint16_t OBX_VIDEO_TEST       = 3; ///< Test default mode
 
 
 /// \brief Obelix video message
 typedef struct _T_ObelixVideoMessage
 {
   uint16_t Number;                         ///< Message number
-  uint16_t CellCount;                      ///< Cell count in the message
+  uint16_t CellCount;                      ///< Valid cell count in the message
   double   HeadingDeg;                     ///< Platform heading [°]
   double   StartAzDeg;                     ///< Start azimuth    [°] (North reference)
   double   EndAzDeg;                       ///< End azimuth      [°] (North reference)
@@ -39,12 +39,15 @@ typedef struct _T_ObelixVideoMessage
 
 
 
-static const double OBX_TRK_LATLONG_LSB       = 180.0 / (((uint64_t)1<<31)-1);
-static const double OBX_TRK_BEARINGCOURSE_LSB = 360.0 / (((uint32_t)1<<16)-1);
-static const double OBX_TRK_DISTANCE_LSB      = 0.1;
-static const double OBX_TRK_SPEED_LSB         = 0.1;
-static const double OBX_TRK_ALT_LSB           = 25;
-static const uint16_t OBX_TRK_TBL_CNT         = 10;
+static const double OBX_TRK_LATLONG_LSB       = 180.0 / (((uint64_t)1<<31)-1); ///< Track latitude & longitude LSB
+static const double OBX_TRK_BEARINGCOURSE_LSB = 360.0 / (((uint32_t)1<<16)-1); ///< Track bearing & course LSB
+static const double OBX_TRK_DISTANCE_LSB      = 0.1;                           ///< Track distance LSB
+static const double OBX_TRK_SPEED_LSB         = 0.1;                           ///< Track speed LSB
+static const double OBX_TRK_ALT_LSB           = 25;                            ///< Track altitude LSB
+
+
+
+static const uint16_t OBX_TRK_TBL_CNT         = 10; ///< Maximum number of tracks in a track message
 
 /// \brief Obelix track
 typedef struct _T_ObelixTrack
@@ -92,15 +95,15 @@ typedef struct _T_ObelixMapPoint
 }T_ObelixMapPoint;
 
 
-static const uint16_t OBX_MAP_POLY   = 0;
-static const uint16_t OBX_MAP_WAY    = 1;
-static const uint16_t OBX_MAP_SINGLE = 2;
+static const uint16_t OBX_MAP_POLY   = 0; ///< Map polygon object
+static const uint16_t OBX_MAP_WAY    = 1; ///< Map waypoint route object
+static const uint16_t OBX_MAP_SINGLE = 2; ///< Map single point object
 
 static const uint16_t OBX_MAP_APPEND = 0;
 static const uint16_t OBX_MAP_UPDATE = 1;
 static const uint16_t OBX_MAP_DELETE = 2;
 
-static const uint16_t OBX_MAP_TBL_CNT = 20;
+static const uint16_t OBX_MAP_TBL_CNT = 20; ///< Maximum point in a map message
 
 
 

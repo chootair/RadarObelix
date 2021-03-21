@@ -35,18 +35,28 @@ typedef struct _T_FifoHandler
   QReadWriteLock* mFifoLocker;   ///< FIFO locker
 }T_FifoHandler;
 
+typedef struct _T_HistoryPoint
+{
+  qint64 Date;      ///< Date (ms since Epoch)
+  double Latitude;  ///< Latitude [°]
+  double Longitude; ///< Longitude [°]
+}T_HistoryPoint;
+
+typedef QList<T_HistoryPoint> T_History;
+
 /// \brief Plot track
 typedef struct _T_PlotTrack
 {
-  T_ObelixTrack Track;
-  qint64        LastUpdate;
+  T_ObelixTrack Track;      ///< Obelix track structure
+  qint64        LastUpdate; ///< Last update date (ms since Epoch)
+  T_History     History;    ///< Track history
 }T_PlotTrack;
 
+/// \brief Plot map object
 typedef struct _T_PlotMap
 {
-  uint8_t                 Type;
-  uint16_t                Count;
-  QList<T_ObelixMapPoint> Points;
+  uint8_t                 Type;   ///< Obelix type of map object
+  QList<T_ObelixMapPoint> Points; ///< List of Obelix point in the object
 }T_PlotMap;
 
 /// \brief Persistant mode
@@ -57,7 +67,7 @@ typedef enum _T_PersistMode
 }T_PersistMode;
 
 
-
+/// \brief Obelix plot widget
 class OBELIXLIBSHARED_EXPORT ObelixPlotWidget : public QOpenGLWidget
 {
   Q_OBJECT
@@ -99,7 +109,12 @@ public:
   inline double DisplayPxKtsRatio() const  {return mDisplayPxKtsRatio;}
   inline void SetDisplayPxKtsRatio(double pDisplayPxKtsRatio) {mDisplayPxKtsRatio=pDisplayPxKtsRatio;}
 
+  inline double VideoIntensity() const  {return mVideoIntensity;}
+  inline void SetVideoIntensity(double pVideoIntensity) {mVideoIntensity=pVideoIntensity;}
 
+
+
+  inline uint RangeRingSpaceNm  () const {return mRangeRingSpaceNm;}
   inline bool NorthUp           () const {return mNorthUp;}
   inline bool DisplayAntenna    () const {return mDisplayAntenna;}
   inline bool DisplayRangeLimit () const {return mDisplayRangeLimit;}
@@ -111,6 +126,12 @@ public:
   inline bool DisplayHeading    () const {return mDisplayHeading;}
   inline bool DisplayMapPoints  () const {return mDisplayMapPoints;}
   inline bool DisplayMapPolygons() const {return mDisplayMapPolygons;}
+  inline bool DisplayPlateformHistory() const {return mDisplayPlateformHistory;}
+  inline bool DisplayTracksHistory() const {return mDisplayTracksHistory;}
+  inline int  SelectedTrackIdx() const {return mSelectedTrackIdx;}
+  inline uint HistoryDisplayMaxTimeSec() const {return mHistoryDisplayMaxTimeSec;}
+
+  inline void SetRangeRingSpaceNm   (uint pRangeRingSpace) {mRangeRingSpaceNm = pRangeRingSpace; mNeedToPaintInfo = true;}
 
   inline void SetNorthUp            (bool pEnable) {mNorthUp            = pEnable; mNeedToPaintInfo = true;}
   inline void SetDisplayAntenna     (bool pEnable) {mDisplayAntenna     = pEnable;}
@@ -123,6 +144,10 @@ public:
   inline void SetDisplayHeading     (bool pEnable) {mDisplayHeading     = pEnable; mNeedToPaintInfo=true;}
   inline void SetDisplayMapPoints   (bool pEnable) {mDisplayMapPoints   = pEnable;}
   inline void SetDisplayMapPolygons (bool pEnable) {mDisplayMapPolygons = pEnable;}
+  inline void SetDisplayPlateformHistory   (bool pEnable) {mDisplayPlateformHistory   = pEnable;}
+  inline void SetDisplayTracksHistory (bool pEnable) {mDisplayTracksHistory = pEnable;}
+  inline void SetSelectedTrackIdx(int pIndex) {mSelectedTrackIdx = pIndex;}
+  inline void SetHistoryDisplayMaxTimeSec(uint pMaxTimeSec) {mHistoryDisplayMaxTimeSec = pMaxTimeSec;}
 
 
   inline QColor ColorAntenna    () const {return mColorAntenna;}
@@ -135,6 +160,10 @@ public:
   inline QColor ColorHeading    () const {return mColorHeading;}
   inline QColor ColorMapPoints  () const {return mColorMapPoints;}
   inline QColor ColorMapPolygons() const {return mColorMapPolygons;}
+  inline QColor ColorPlateformHistory() const {return mColorPlateformHistory;}
+  inline QColor ColorTracksHistory() const {return mColorTracksHistory;}
+  inline QColor ColorSelectedTrack() const {return mColorSelectedTrack;}
+
 
   inline void  SetColorAntenna   (QColor pColor) {mColorAntenna     = pColor;}
   inline void  SetColorRangeLimit(QColor pColor) {mColorRangeLimit  = pColor; mNeedToPaintInfo=true;}
@@ -146,6 +175,9 @@ public:
   inline void  SetColorHeading   (QColor pColor) {mColorHeading     = pColor;}
   inline void SetColorMapPoints  (QColor pColor) {mColorMapPoints   = pColor;}
   inline void SetColorMapPolygons(QColor pColor) {mColorMapPolygons = pColor;}
+  inline void SetColorPlateformHistory(QColor pColor) {mColorPlateformHistory = pColor;}
+  inline void SetColorTracksHistory(QColor pColor) {mColorTracksHistory = pColor;}
+  inline void SetColorSelectedTrack(QColor pColor) {mColorSelectedTrack = pColor;}
 
 protected:
   void resizeEvent(QResizeEvent* event) override;
@@ -160,6 +192,8 @@ private:
   void PaintMap(QPainter* pPainter);
   int ReadTrackPlots();
   int ReadMapPlots();
+
+  QVector<QPointF> BuildHistroryLine(T_History pHistory, double pAzimuthOffsetRad);
 
 private:
 
@@ -203,6 +237,8 @@ private:
 
 
       double mDisplayPxKtsRatio;
+      double mVideoIntensity;
+
 
   //
 
@@ -240,6 +276,12 @@ private:
 
   QHash<uint16_t, T_PlotMap> mMapTable;
 
+  T_History mPlatformHistory;
+
+
+  qint32 mSelectedTrackIdx;
+  uint mHistoryDisplayMaxTimeSec;
+
 
 
   bool mDisplayAntenna;
@@ -253,6 +295,10 @@ private:
   bool mDisplayMapPoints;
   bool mDisplayMapPolygons;
   bool mNorthUp;
+  bool mDisplayPlateformHistory;
+  bool mDisplayTracksHistory;
+
+
 
   QColor mColorAntenna;
   QColor mColorRangeLimit;
@@ -264,6 +310,13 @@ private:
   QColor mColorHeading;
   QColor mColorMapPoints;
   QColor mColorMapPolygons;
+  QColor mColorPlateformHistory;
+  QColor mColorTracksHistory;
+  QColor mColorSelectedTrack;
+
+
+
+  uint mRangeRingSpaceNm;
 
   bool mNeedToPaintInfo;
 

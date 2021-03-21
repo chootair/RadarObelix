@@ -60,8 +60,6 @@ public:
   inline bool AntennaInverseRotate() const {return mAntennaInverseRotate;}
 
 
-  void SetVideoIntensity(double pVal);
-  double VideoIntensity();
 
 
   void SetVideoNoise(double pVal);

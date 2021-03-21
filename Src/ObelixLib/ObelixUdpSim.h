@@ -53,13 +53,11 @@ public:
   inline double VideoAzimutGapCorrectionRatio() const {return mVideoAzGapCorrectionRto;}
   inline double VideoAzimutGapLevelRatio() const {return mVideoAzGapLvlRto;}
   inline double VideoRangeGapLevelRatio() const {return mVideoRgGapLvlRto;}
-  inline double VideoIntensity() const {return mVideoIntensity;}
   inline double VideoNoise() const {return mVideoNoise;}
 
   inline void SetVideoAzimutGapCorrectionRatio(double pVal) {mVideoAzGapCorrectionRto = pVal;}
   inline void SetVideoAzimutGapLevelRatio(double pVal) {mVideoAzGapLvlRto = pVal;}
   inline void SetVideoRangeGapLevelRatio(double pVal) {mVideoRgGapLvlRto = pVal;}
-  inline void SetVideoIntensity(double pVal) {mVideoIntensity = pVal;}
   inline void SetVideoNoise(double pVal) {mVideoNoise = pVal;}
 
 
@@ -105,7 +103,6 @@ private:
   double mVideoAzGapCorrectionRto;
   double mVideoAzGapLvlRto;
   double mVideoRgGapLvlRto;
-  double mVideoIntensity;
   double mVideoNoise;
 
   // Platfrom position

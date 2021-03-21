@@ -30,7 +30,7 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->sbxSimTimer->setValue(mObelixSimThread->TimerPeridod());
   ui->sbxBeamWidth->setValue(mObelixSimThread->BeamWidth());
   ui->sbxRange->setValue(mObelixSimThread->Range());
-  ui->sbxIntensty->setValue(mObelixSimThread->VideoIntensity());
+  ui->sbxIntensty->setValue(ui->olxPlot->VideoIntensity());
   ui->sbxSimNoise->setValue(mObelixSimThread->VideoNoise());
   ui->sbxPlatformHeading->setValue(mObelixSimThread->PlatformHeading());
   ui->sbxAzGapRto->setValue(mObelixSimThread->VideoAzimutGapLevelRatio());
@@ -46,18 +46,31 @@ MainWindow::MainWindow(QWidget *parent) :
   // DISPLAY
   ui->sbxScopeDisplayRange->setValue(ui->olxPlot->RangeNm());
   ui->sbxDisplayPxKtsRatio->setValue(ui->olxPlot->DisplayPxKtsRatio());
+  ui->sbxScopeRangeRingSpace->setValue(ui->olxPlot->RangeRingSpaceNm());
   ui->ckxDispVideo->setChecked(ui->olxPlot->DisplayVideo());
   ui->ckxDispTracks->setChecked(ui->olxPlot->DisplayTracks());
   ui->ckxDispCompas->setChecked(ui->olxPlot->DisplayCompas());
   ui->ckxDispAircraft->setChecked(ui->olxPlot->DisplayAircraft());
   ui->ckxDispHeading->setChecked(ui->olxPlot->DisplayHeading());
   ui->ckxNorthUp->setChecked(ui->olxPlot->NorthUp());
+  ui->ckxDispPolygons->setChecked(ui->olxPlot->DisplayMapPolygons());
+  ui->ckxDispPoints->setChecked(ui->olxPlot->DisplayMapPoints());
+  ui->ckxDispPlateformHistory->setChecked(ui->olxPlot->DisplayPlateformHistory());
+  ui->ckxDispTracksHistory->setChecked(ui->olxPlot->DisplayTracksHistory());
 
   ui->ckxDispAntenna->setChecked(ui->olxPlot->DisplayAntenna());
   ui->ckxDispRangeLimit->setChecked(ui->olxPlot->DisplayRangeLimit());
   ui->ckxDispRangeRings->setChecked(ui->olxPlot->DisplayRangeRings());
   ui->sbxPresistance->setValue(ui->olxPlot->PresistenceRatio());
   ui->cbxPresistanceMode->setCurrentIndex(ui->olxPlot->PersistenceMode());
+
+  ui->sbxSelectedTrack->setValue(ui->olxPlot->SelectedTrackIdx());
+  ui->sbxHistoryMaxDurationS->setValue(ui->olxPlot->HistoryDisplayMaxTimeSec());
+
+
+
+
+
 
   mMainTimer = new QTimer(this);
   connect(mMainTimer,&QTimer::timeout,this,&MainWindow::OnTimerTick);
@@ -83,6 +96,12 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->pbxColorVideo     ->SetColor(ui->olxPlot->ColorVideo());
   ui->pbxColorAircraft  ->SetColor(ui->olxPlot->ColorAircraft());
   ui->pbxColorHeading   ->SetColor(ui->olxPlot->ColorHeading());
+  ui->pbxColorPolygons  ->SetColor(ui->olxPlot->ColorMapPolygons());
+  ui->pbxColorPoints    ->SetColor(ui->olxPlot->ColorMapPoints());
+
+  ui->pbxColorPlateformHistory    ->SetColor(ui->olxPlot->ColorPlateformHistory());
+  ui->pbxColorTrackHistory    ->SetColor(ui->olxPlot->ColorTracksHistory());
+  ui->pbxColorSelectedTrack    ->SetColor(ui->olxPlot->ColorSelectedTrack());
 
   connect(ui->pbxColorAntenna, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
   connect(ui->pbxColorRangeLimit, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
@@ -92,6 +111,12 @@ MainWindow::MainWindow(QWidget *parent) :
   connect(ui->pbxColorVideo, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
   connect(ui->pbxColorAircraft, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
   connect(ui->pbxColorHeading, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
+  connect(ui->pbxColorPolygons, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
+  connect(ui->pbxColorPoints, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
+
+  connect(ui->pbxColorPlateformHistory, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
+  connect(ui->pbxColorTrackHistory, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
+  connect(ui->pbxColorSelectedTrack, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
 
 
   ui->sbxPlatformLat->setValue(40);
@@ -113,14 +138,19 @@ void MainWindow::OnColorChanged(QColor pColor)
   Q_UNUSED(pColor);
 
   //
-  ui->olxPlot->SetColorAntenna   (ui->pbxColorAntenna   ->Color());
-  ui->olxPlot->SetColorRangeLimit(ui->pbxColorRangeLimit->Color());
-  ui->olxPlot->SetColorRangeRings(ui->pbxColorRangeRing ->Color());
-  ui->olxPlot->SetColorCompas    (ui->pbxColorCompas    ->Color());
-  ui->olxPlot->SetColorTracks    (ui->pbxColorTrack     ->Color());
-  ui->olxPlot->SetColorVideo     (ui->pbxColorVideo     ->Color());
-  ui->olxPlot->SetColorAircraft  (ui->pbxColorAircraft  ->Color());
-  ui->olxPlot->SetColorHeading   (ui->pbxColorHeading   ->Color());
+  ui->olxPlot->SetColorAntenna    (ui->pbxColorAntenna   ->Color());
+  ui->olxPlot->SetColorRangeLimit (ui->pbxColorRangeLimit->Color());
+  ui->olxPlot->SetColorRangeRings (ui->pbxColorRangeRing ->Color());
+  ui->olxPlot->SetColorCompas     (ui->pbxColorCompas    ->Color());
+  ui->olxPlot->SetColorTracks     (ui->pbxColorTrack     ->Color());
+  ui->olxPlot->SetColorVideo      (ui->pbxColorVideo     ->Color());
+  ui->olxPlot->SetColorAircraft   (ui->pbxColorAircraft  ->Color());
+  ui->olxPlot->SetColorHeading    (ui->pbxColorHeading   ->Color());
+  ui->olxPlot->SetColorMapPolygons(ui->pbxColorPolygons  ->Color());
+  ui->olxPlot->SetColorMapPoints  (ui->pbxColorPoints    ->Color());
+  ui->olxPlot->SetColorPlateformHistory  (ui->pbxColorPlateformHistory    ->Color());
+  ui->olxPlot->SetColorTracksHistory  (ui->pbxColorTrackHistory    ->Color());
+  ui->olxPlot->SetColorSelectedTrack  (ui->pbxColorSelectedTrack    ->Color());
 }
 
 
@@ -211,7 +241,7 @@ void MainWindow::on_cbxVideoMode_currentIndexChanged(int index)
 
 void MainWindow::on_sbxIntensty_valueChanged(double arg1)
 {
-  mObelixSimThread->SetVideoIntensity(arg1);
+  ui->olxPlot->SetVideoIntensity(arg1);
 }
 
 void MainWindow::on_pbxClearScope_clicked()
@@ -523,6 +553,9 @@ void MainWindow::PushSimTrackTable()
     mlTrackTable[i].Course      = static_cast<quint16>(mSimTable[i].Course     /OBX_TRK_BEARINGCOURSE_LSB);
     mlTrackTable[i].GroundSpeed = static_cast<quint16>(mSimTable[i].GroundSpeed/OBX_TRK_SPEED_LSB);
     //
+    mlTrackTable[i].Latitude  = static_cast<quint32>(mSimTable[i].Latitude/OBX_TRK_LATLONG_LSB);
+    mlTrackTable[i].Longitude = static_cast<quint32>(mSimTable[i].Longitude/OBX_TRK_LATLONG_LSB);
+    //
     sprintf(mlTrackTable[i].CallSing, mSimTable[i].CallSing.c_str());
   }
 
@@ -658,4 +691,45 @@ void MainWindow::on_sbxAzCorrectionGapRto_valueChanged(double arg1)
 void MainWindow::on_sbxRangeGapRto_valueChanged(double arg1)
 {
   mObelixSimThread->SetVideoRangeGapLevelRatio(arg1);
+}
+
+void MainWindow::on_ckxDispPolygons_stateChanged(int arg1)
+{
+  Q_UNUSED(arg1);
+  ui->olxPlot->SetDisplayMapPolygons(ui->ckxDispPolygons->isChecked());
+  ui->olxPlot->RefreshScope();
+}
+
+void MainWindow::on_ckxDispPoints_stateChanged(int arg1)
+{
+  Q_UNUSED(arg1);
+  ui->olxPlot->SetDisplayMapPoints(ui->ckxDispPoints->isChecked());
+  ui->olxPlot->RefreshScope();
+}
+
+void MainWindow::on_sbxScopeRangeRingSpace_valueChanged(int arg1)
+{
+  ui->olxPlot->SetRangeRingSpaceNm(arg1);
+}
+
+void MainWindow::on_sbxSelectedTrack_valueChanged(int arg1)
+{
+  ui->olxPlot->SetSelectedTrackIdx(arg1);
+}
+
+void MainWindow::on_sbxHistoryMaxDurationS_valueChanged(int arg1)
+{
+  ui->olxPlot->SetHistoryDisplayMaxTimeSec(arg1);
+}
+
+void MainWindow::on_ckxDispPlateformHistory_stateChanged(int arg1)
+{
+  Q_UNUSED(arg1);
+    ui->olxPlot->SetDisplayPlateformHistory(ui->ckxDispPlateformHistory->isChecked());
+}
+
+void MainWindow::on_ckxDispTracksHistory_stateChanged(int arg1)
+{
+  Q_UNUSED(arg1);
+    ui->olxPlot->SetDisplayTracksHistory(ui->ckxDispTracksHistory->isChecked());
 }

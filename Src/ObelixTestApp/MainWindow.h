@@ -115,6 +115,20 @@ private slots:
 
   void on_sbxRangeGapRto_valueChanged(double arg1);
 
+  void on_ckxDispPolygons_stateChanged(int arg1);
+
+  void on_ckxDispPoints_stateChanged(int arg1);
+
+  void on_sbxScopeRangeRingSpace_valueChanged(int arg1);
+
+  void on_sbxSelectedTrack_valueChanged(int arg1);
+
+  void on_sbxHistoryMaxDurationS_valueChanged(int arg1);
+
+  void on_ckxDispPlateformHistory_stateChanged(int arg1);
+
+  void on_ckxDispTracksHistory_stateChanged(int arg1);
+
 private:
   void BuildSimTrackTable();
   void BuildSimCloudTable();

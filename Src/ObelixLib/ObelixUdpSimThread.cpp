@@ -42,25 +42,6 @@ void ObelixUdpSimThread::SetVideoBeamParameters(int pNbLevel, int pNbCells)
   mBeamNbCells = pNbCells;
 }
 
-void ObelixUdpSimThread::SetVideoIntensity(double pVal)
-{
-  if (mObelixUdpGene)
-  {
-    mObelixUdpGene->SetVideoIntensity(pVal);
-  }
-  mVideoIntensity = pVal;
-}
-
-double ObelixUdpSimThread::VideoIntensity()
-{
-  if (mObelixUdpGene)
-  {
-    mVideoIntensity = mObelixUdpGene->VideoIntensity();
-  }
-
-  return mVideoIntensity;
-}
-
 void ObelixUdpSimThread::SetVideoNoise(double pVal)
 {
   if (mObelixUdpGene)
@@ -250,8 +231,6 @@ void ObelixUdpSimThread::run()
   mObelixUdpGene->SetCloudTableRef(&mCloudTable);
 
 
-
-  mObelixUdpGene->SetVideoIntensity(mVideoIntensity);
    mObelixUdpGene->SetVideoNoise(mVideoNoise);
 
 

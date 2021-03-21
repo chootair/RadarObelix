@@ -82,9 +82,11 @@ ObelixPlotWidget::ObelixPlotWidget(QWidget *parent) : QOpenGLWidget(parent)
 
 
   mDisplayPxKtsRatio = 1;
+  mVideoIntensity = 0.8;
   
   
   mRangeNm = 100;
+  mRangeRingSpaceNm = 25;
 
 
   mDisplayAntenna = true;
@@ -98,6 +100,12 @@ ObelixPlotWidget::ObelixPlotWidget(QWidget *parent) : QOpenGLWidget(parent)
   mDisplayMapPolygons = true;
   //
   mNorthUp = true;
+  //
+  mDisplayPlateformHistory = false;
+  mDisplayTracksHistory = false;
+  //
+  mSelectedTrackIdx = -1;
+  mHistoryDisplayMaxTimeSec = 30;
 
   mColorAntenna     = Qt::green;
   mColorRangeLimit  = Qt::green;
@@ -109,6 +117,9 @@ ObelixPlotWidget::ObelixPlotWidget(QWidget *parent) : QOpenGLWidget(parent)
   mColorHeading     = Qt::red;
   mColorMapPoints   = Qt::darkYellow;
   mColorMapPolygons = Qt::darkRed;
+  mColorPlateformHistory = Qt::darkYellow;
+  mColorTracksHistory    = Qt::darkGray;
+  mColorSelectedTrack    = Qt::magenta;
 
 
   mNeedToPaintInfo = true;
@@ -307,16 +318,15 @@ void ObelixPlotWidget::PaintVideoCells(QPainter *pPainter)
       mCellPt[2].setY(mPlotRad - mPlotRad/mRangeNm*(mFifoVideoPtr[i].StartRgNm + lIdxCell*mFifoVideoPtr[i].CellWidthNm)*lCosEnd);
       
       // Fill cell according radar mode
-      if (mFifoVideoPtr[i].VideoMode == OBX_VIDEO_SEARCH)
+      if ((mFifoVideoPtr[i].VideoMode == OBX_VIDEO_SEARCH    )||
+          (mFifoVideoPtr[i].VideoMode == OBX_VIDEO_TEST_CLOCK))
       {
-        double lFactor = mFifoVideoPtr[i].CellValueTbl[lIdxCell-1]/255.0;
+        double lFactor = mVideoIntensity * mFifoVideoPtr[i].CellValueTbl[lIdxCell-1]/255.0;
 
 
         lBrush.setColor(QColor(lFactor*mColorVideo.red(),
                                lFactor*mColorVideo.green(),
                                lFactor*mColorVideo.blue()));
-
-        //lBrush.setColor(QColor(0,mFifoVideoPtr[i].CellValueTbl[lIdxCell-1],0));
       }
       else if (mFifoVideoPtr[i].VideoMode == OBX_VIDEO_WEATHER)
       {
@@ -368,15 +378,10 @@ void ObelixPlotWidget::PaintVideoCells(QPainter *pPainter)
           lWeatherColor = Qt::magenta;
         }
 
-        //
-        lBrush.setColor(lWeatherColor);
-      }
-      else if (mFifoVideoPtr[i].VideoMode == OBX_VIDEO_TEST_CLOCK)
-      {
-        double lFactor = mFifoVideoPtr[i].CellValueTbl[lIdxCell-1]/255.0;
-        lBrush.setColor(QColor(lFactor*mColorVideo.red(),
-                               lFactor*mColorVideo.green(),
-                               lFactor*mColorVideo.blue()));
+        // Intensity modulation
+        lBrush.setColor(QColor(mVideoIntensity*lWeatherColor.red(),
+                               mVideoIntensity*lWeatherColor.green(),
+                               mVideoIntensity*lWeatherColor.blue()));
       }
       else if (mFifoVideoPtr[i].VideoMode == OBX_VIDEO_TEST)
       {
@@ -397,8 +402,10 @@ void ObelixPlotWidget::PaintVideoCells(QPainter *pPainter)
           lTestColor = Qt::blue;
         }
 
-        //
-        lBrush.setColor(lTestColor);
+        // Intensity modulation
+        lBrush.setColor(QColor(mVideoIntensity*lTestColor.red(),
+                               mVideoIntensity*lTestColor.green(),
+                               mVideoIntensity*lTestColor.blue()));
       }
 
       else
@@ -429,7 +436,7 @@ void ObelixPlotWidget::PaintTrackPlots(QPainter *pPainter)
 {
   double lAzimuthOffsetRad = 0;
 
-  pPainter->setPen(mColorTracks);
+
   pPainter->setBrush(Qt::NoBrush);
 
 
@@ -452,6 +459,8 @@ void ObelixPlotWidget::PaintTrackPlots(QPainter *pPainter)
 
     /// \todo Add LSB
     /// \todo Add Speed display factor
+    ///
+    ///
     ///
     ///
 
@@ -481,6 +490,16 @@ void ObelixPlotWidget::PaintTrackPlots(QPainter *pPainter)
       lAgeString.append(".");
     }
 
+
+    // Track color
+    if ((mSelectedTrackIdx >=0) && (lPlotTrack.Track.Id == mSelectedTrackIdx))
+    {
+      pPainter->setPen(mColorSelectedTrack);
+    }
+    else
+    {
+      pPainter->setPen(mColorTracks);
+    }
 
     // Paint
     pPainter->drawRect(lTrackPt.x()-3, lTrackPt.y()-3, 6,6);
@@ -541,14 +560,17 @@ void ObelixPlotWidget::PaintTools(QPainter *pPainter)
   {
     pPainter->setPen(mColorRangeRings);
 
-    // Ring space auto
-    int lRangeRingSpace = static_cast<int>(10*floor(mRangeNm/30.0));
+    uint lRangeRingSpace = mRangeRingSpaceNm;
 
-    //
-    lRangeRingSpace = qMax(lRangeRingSpace, 5);
+    // Ring space auto ?
+    if (lRangeRingSpace <= 0)
+    {
+      lRangeRingSpace = static_cast<uint>(10*floor(mRangeNm/30.0));
+      lRangeRingSpace = qMax(lRangeRingSpace, (uint)5);
+    }
 
     // Loop on range rings
-    for (int lRangeRingDst=lRangeRingSpace; lRangeRingDst<mRangeNm; lRangeRingDst += lRangeRingSpace)
+    for (uint lRangeRingDst=lRangeRingSpace; lRangeRingDst<mRangeNm; lRangeRingDst += lRangeRingSpace)
     {
       int lRangeScale = mPlotRad/mRangeNm*lRangeRingDst;
       pPainter->drawEllipse(-lRangeScale, -lRangeScale, 2*lRangeScale, 2*lRangeScale);
@@ -653,7 +675,7 @@ void ObelixPlotWidget::PaintMap(QPainter *pPainter)
   double lPlatformX = OTB::LonToX(mLastMapPlatformLongitude);
   double lPlatformY = OTB::LatToY(mLastMapPlatformLatitude);
 
-  // Loop on plot track
+  // Loop on plot map object
   foreach (T_PlotMap lPlotMap, mMapTable)
   {
     QPolygon polygon;
@@ -689,7 +711,7 @@ void ObelixPlotWidget::PaintMap(QPainter *pPainter)
 
       if (lPlotMap.Type == OBX_MAP_POLY)
       {
-      polygon.append(QPoint(lPtX, lPtY));
+        polygon.append(QPoint(lPtX, lPtY));
       }
       // Single point object
       else if ((lPlotMap.Type == OBX_MAP_SINGLE) && (mDisplayMapPoints == true))
@@ -720,8 +742,85 @@ void ObelixPlotWidget::PaintMap(QPainter *pPainter)
       pPainter->drawPolygon(polygon);
     }
   }
+  
+  // History
+  
+  // Platform history
+  if (true == mDisplayPlateformHistory)
+  {
+    pPainter->setPen(mColorPlateformHistory);
+    pPainter->drawLines(BuildHistroryLine(mPlatformHistory, lAzimuthOffsetRad));
+  }
+  
+  // Track history
+  if (true == mDisplayTracksHistory)
+  {
+    foreach(T_PlotTrack lTrack, mTrackTable)
+    {
+      if ((mSelectedTrackIdx >=0) && (lTrack.Track.Id == mSelectedTrackIdx))
+      {
+        pPainter->setPen(mColorSelectedTrack.darker());
+      }
+      else
+      {
+        pPainter->setPen(mColorTracksHistory);
+      }
 
+      //
+      pPainter->drawLines(BuildHistroryLine(lTrack.History, lAzimuthOffsetRad));
+    }
+  }
 }
+
+
+
+
+QVector<QPointF> ObelixPlotWidget::BuildHistroryLine(T_History pHistory, double pAzimuthOffsetRad)
+{
+  QVector<QPointF> lHistoryLine;
+  //
+  double lPixelRatio = mPlotRad/(mRangeNm * OTB::NM_TO_M);
+  double lPtAz       = 0;
+  double lPtDist     = 0;
+  //
+  qint64 lNow = QDateTime::currentMSecsSinceEpoch();
+
+  foreach(T_HistoryPoint lHistPoint, pHistory)
+  {
+    // Too old
+    if (lNow > (lHistPoint.Date+1000*mHistoryDisplayMaxTimeSec))
+    {
+      continue;
+    }
+
+    OTB::ComputeAzimuthDistance(mLastMapPlatformLatitude, mLastMapPlatformLongitude, lHistPoint.Latitude,  lHistPoint.Longitude, lPtAz, lPtDist);
+
+
+    lPtDist = lPtDist * lPixelRatio;
+    lPtAz   = lPtAz * OTB::DEG_TO_RAD;
+
+    // Point Position
+    int lPtX = width()/2  + static_cast<int>(lPtDist * sin(pAzimuthOffsetRad + lPtAz));
+    int lPtY = height()/2 - static_cast<int>(lPtDist * cos(pAzimuthOffsetRad + lPtAz));
+
+    lHistoryLine.append(QPointF(lPtX, lPtY));
+  }
+
+  return lHistoryLine;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 void ObelixPlotWidget::PaintControl()
@@ -868,7 +967,7 @@ int ObelixPlotWidget::ReadMapPlots()
       // Append
       if (mFifoMapPtr[i].OperationType == OBX_MAP_APPEND)
       {
-        mMapTable[mFifoMapPtr[i].ElementId].Count += mFifoMapPtr[i].PointCount;
+        //mMapTable[mFifoMapPtr[i].ElementId].Count += mFifoMapPtr[i].PointCount;
 
         //
         for (int idxPt=0; idxPt<mFifoMapPtr[i].PointCount; idxPt++)
@@ -892,7 +991,7 @@ int ObelixPlotWidget::ReadMapPlots()
 
         //
         lNewMapElement.Type  = mFifoMapPtr[i].ElementType;
-        lNewMapElement.Count = mFifoMapPtr[i].PointCount;
+        //lNewMapElement.Count = mFifoMapPtr[i].PointCount;
 
         //
         for (int idxPt=0; idxPt<mFifoMapPtr[i].PointCount; idxPt++)
@@ -909,6 +1008,26 @@ int ObelixPlotWidget::ReadMapPlots()
     mLastMapPlatformLatitude  = static_cast<double>(mFifoMapPtr[i].PlatformLatitude) * OBX_TRK_LATLONG_LSB;
     mLastMapPlatformLongitude = static_cast<double>(mFifoMapPtr[i].PlatformLongitude)* OBX_TRK_LATLONG_LSB;
     mLastMapPlatformHeading   = static_cast<double>(mFifoMapPtr[i].PlatformHeading)  * OBX_TRK_BEARINGCOURSE_LSB;
+
+    // Append to history
+    T_HistoryPoint lHistPt;
+    lHistPt.Date      = QDateTime::currentMSecsSinceEpoch();
+    lHistPt.Latitude  = mLastMapPlatformLatitude;
+    lHistPt.Longitude = mLastMapPlatformLongitude;
+    if (mPlatformHistory.count() > 1)
+    {
+      if ((mPlatformHistory.last().Latitude == mLastMapPlatformLatitude) &&
+          (mPlatformHistory.last().Longitude == mLastMapPlatformLongitude) )
+      {
+        mPlatformHistory.takeLast();
+      }
+    }
+
+    mPlatformHistory.append(lHistPt);
+    if (mPlatformHistory.count() > 200)
+    {
+      mPlatformHistory.takeFirst();
+    }
   }
 
   // Reset index
@@ -951,6 +1070,32 @@ int ObelixPlotWidget::ReadTrackPlots()
         lNewTrack.LastUpdate = QDateTime::currentMSecsSinceEpoch();
         //
         mTrackTable.insert(lNewTrack.Track.Id, lNewTrack);
+      }
+
+      // History
+      T_HistoryPoint lHistPt;
+      lHistPt.Date      = QDateTime::currentMSecsSinceEpoch();
+      lHistPt.Latitude  = static_cast<double>(mTrackTable[mFifoTrackPtr[i].TrackTbl[j].Id].Track.Latitude)*OBX_TRK_LATLONG_LSB;
+      lHistPt.Longitude = static_cast<double>(mTrackTable[mFifoTrackPtr[i].TrackTbl[j].Id].Track.Longitude)*OBX_TRK_LATLONG_LSB;;
+
+
+
+      if (mTrackTable[mFifoTrackPtr[i].TrackTbl[j].Id].History.count() > 1)
+      {
+        if ((mTrackTable[mFifoTrackPtr[i].TrackTbl[j].Id].History.last().Latitude == lHistPt.Latitude) &&
+            (mTrackTable[mFifoTrackPtr[i].TrackTbl[j].Id].History.last().Longitude == lHistPt.Longitude) )
+        {
+          mTrackTable[mFifoTrackPtr[i].TrackTbl[j].Id].History.takeLast();
+        }
+      }
+
+
+      mTrackTable[mFifoTrackPtr[i].TrackTbl[j].Id].History.append(lHistPt);
+
+
+      if (mTrackTable[mFifoTrackPtr[i].TrackTbl[j].Id].History.count() > 200)
+      {
+        mTrackTable[mFifoTrackPtr[i].TrackTbl[j].Id].History.takeFirst();
       }
     }
   }
