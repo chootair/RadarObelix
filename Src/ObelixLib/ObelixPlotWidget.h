@@ -23,6 +23,8 @@
 #include "ObelixLibDef.h"
 #include "Obelix.h"
 #include "PresistImage.h"
+#include "MapManager.h"
+
 
 
 /// \brief FIFO handler
@@ -67,6 +69,7 @@ typedef enum _T_PersistMode
 }T_PersistMode;
 
 
+
 /// \brief Obelix plot widget
 class OBELIXLIBSHARED_EXPORT ObelixPlotWidget : public QOpenGLWidget
 {
@@ -79,6 +82,9 @@ public:
   void RefreshScope();
   void ClearScope();
 
+  bool AddShapeMapFile(QString pShapeFilename);
+
+
   void SetPresistenceRatio(double pRatio);
   inline double PresistenceRatio() const { return mPersistRatio;}
 
@@ -86,7 +92,7 @@ public:
   inline T_PersistMode PersistenceMode() const { return mPersistMode;}
 
   inline double RangeNm() const {return mRangeNm;}
-  inline void SetRangeNm(double pRangeNm) {mRangeNm = pRangeNm;}
+  inline void SetRangeNm(double pRangeNm) {mRangeNm = pRangeNm; mNeedToPaintInfo=true; mNeedToPaintShapeMap=true;}
 
 
 
@@ -126,6 +132,7 @@ public:
   inline bool DisplayHeading    () const {return mDisplayHeading;}
   inline bool DisplayMapPoints  () const {return mDisplayMapPoints;}
   inline bool DisplayMapPolygons() const {return mDisplayMapPolygons;}
+  inline bool DisplayShapeMap   () const {return mDisplayShapeMap;}
   inline bool DisplayPlateformHistory() const {return mDisplayPlateformHistory;}
   inline bool DisplayTracksHistory() const {return mDisplayTracksHistory;}
   inline int  SelectedTrackIdx() const {return mSelectedTrackIdx;}
@@ -144,6 +151,7 @@ public:
   inline void SetDisplayHeading     (bool pEnable) {mDisplayHeading     = pEnable; mNeedToPaintInfo=true;}
   inline void SetDisplayMapPoints   (bool pEnable) {mDisplayMapPoints   = pEnable;}
   inline void SetDisplayMapPolygons (bool pEnable) {mDisplayMapPolygons = pEnable;}
+  inline void SetDisplayShapeMap    (bool pEnable) {mDisplayShapeMap    = pEnable;}
   inline void SetDisplayPlateformHistory   (bool pEnable) {mDisplayPlateformHistory   = pEnable;}
   inline void SetDisplayTracksHistory (bool pEnable) {mDisplayTracksHistory = pEnable;}
   inline void SetSelectedTrackIdx(int pIndex) {mSelectedTrackIdx = pIndex;}
@@ -160,6 +168,7 @@ public:
   inline QColor ColorHeading    () const {return mColorHeading;}
   inline QColor ColorMapPoints  () const {return mColorMapPoints;}
   inline QColor ColorMapPolygons() const {return mColorMapPolygons;}
+  inline QColor ColorShapeMap   () const {return mColorMapShape;}
   inline QColor ColorPlateformHistory() const {return mColorPlateformHistory;}
   inline QColor ColorTracksHistory() const {return mColorTracksHistory;}
   inline QColor ColorSelectedTrack() const {return mColorSelectedTrack;}
@@ -175,6 +184,7 @@ public:
   inline void  SetColorHeading   (QColor pColor) {mColorHeading     = pColor;}
   inline void SetColorMapPoints  (QColor pColor) {mColorMapPoints   = pColor;}
   inline void SetColorMapPolygons(QColor pColor) {mColorMapPolygons = pColor;}
+  inline void SetColorShapeMap   (QColor pColor) {mColorMapShape = pColor; mNeedToPaintShapeMap=true;}
   inline void SetColorPlateformHistory(QColor pColor) {mColorPlateformHistory = pColor;}
   inline void SetColorTracksHistory(QColor pColor) {mColorTracksHistory = pColor;}
   inline void SetColorSelectedTrack(QColor pColor) {mColorSelectedTrack = pColor;}
@@ -189,7 +199,8 @@ private:
   void PaintTrackPlots(QPainter* pPainter);
   void PaintHeadingFeatures(QPainter* pPainter);
   void PaintTools(QPainter* pPainter);
-  void PaintMap(QPainter* pPainter);
+  void PaintObelixMap(QPainter* pPainter);
+  void PaintShapeMap(QPainter *pPainter);
   int ReadTrackPlots();
   int ReadMapPlots();
 
@@ -201,9 +212,15 @@ private:
   QImage* mScopeTrackImg;
   QImage* mHeadingImg;
   QImage* mToolsImg;
-  QImage* mMapImg;
+  QImage* mObelixMapImg;
+  QImage* mShapeMapImg;
   QImage* mWidgetImg;
   PresistImage* mPersistImg;
+
+  //
+  MapManager* mShapeMapManager;
+
+
 
   //bool mIsPersistEnabled;
   T_PersistMode mPersistMode;
@@ -294,6 +311,7 @@ private:
   bool mDisplayHeading;
   bool mDisplayMapPoints;
   bool mDisplayMapPolygons;
+  bool mDisplayShapeMap;
   bool mNorthUp;
   bool mDisplayPlateformHistory;
   bool mDisplayTracksHistory;
@@ -313,12 +331,16 @@ private:
   QColor mColorPlateformHistory;
   QColor mColorTracksHistory;
   QColor mColorSelectedTrack;
+  QColor mColorMapShape;
 
 
 
   uint mRangeRingSpaceNm;
 
   bool mNeedToPaintInfo;
+  bool mNeedToPaintShapeMap;
+  double mShapeMapCenterLat;
+  double mShapeMapCenterLon;
 
 
 

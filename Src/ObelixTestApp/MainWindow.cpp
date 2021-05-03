@@ -57,7 +57,7 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->ckxDispPoints->setChecked(ui->olxPlot->DisplayMapPoints());
   ui->ckxDispPlateformHistory->setChecked(ui->olxPlot->DisplayPlateformHistory());
   ui->ckxDispTracksHistory->setChecked(ui->olxPlot->DisplayTracksHistory());
-
+  ui->ckxDispShapeMap->setChecked(ui->olxPlot->DisplayShapeMap());
   ui->ckxDispAntenna->setChecked(ui->olxPlot->DisplayAntenna());
   ui->ckxDispRangeLimit->setChecked(ui->olxPlot->DisplayRangeLimit());
   ui->ckxDispRangeRings->setChecked(ui->olxPlot->DisplayRangeRings());
@@ -98,6 +98,7 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->pbxColorHeading   ->SetColor(ui->olxPlot->ColorHeading());
   ui->pbxColorPolygons  ->SetColor(ui->olxPlot->ColorMapPolygons());
   ui->pbxColorPoints    ->SetColor(ui->olxPlot->ColorMapPoints());
+  ui->pbxColorShapeMap  ->SetColor(ui->olxPlot->ColorShapeMap());
 
   ui->pbxColorPlateformHistory    ->SetColor(ui->olxPlot->ColorPlateformHistory());
   ui->pbxColorTrackHistory    ->SetColor(ui->olxPlot->ColorTracksHistory());
@@ -113,17 +114,21 @@ MainWindow::MainWindow(QWidget *parent) :
   connect(ui->pbxColorHeading, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
   connect(ui->pbxColorPolygons, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
   connect(ui->pbxColorPoints, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
-
+  connect(ui->pbxColorShapeMap, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
   connect(ui->pbxColorPlateformHistory, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
   connect(ui->pbxColorTrackHistory, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
   connect(ui->pbxColorSelectedTrack, &ColorPickerButton::ColorChanged, this, &MainWindow::OnColorChanged);
 
 
-  ui->sbxPlatformLat->setValue(40);
-  ui->sbxPlatformLong->setValue(-1);
+  ui->sbxPlatformLat->setValue(48);
+  ui->sbxPlatformLong->setValue(-5);
 
   BuildSimTrackTable();
   BuildSimCloudTable();
+
+
+
+  ui->olxPlot->AddShapeMapFile("C:\\Data\\Pataugeoire\\ne_10m_coastline\\ne_10m_coastline.shp");
 
 }
 
@@ -151,6 +156,7 @@ void MainWindow::OnColorChanged(QColor pColor)
   ui->olxPlot->SetColorPlateformHistory  (ui->pbxColorPlateformHistory    ->Color());
   ui->olxPlot->SetColorTracksHistory  (ui->pbxColorTrackHistory    ->Color());
   ui->olxPlot->SetColorSelectedTrack  (ui->pbxColorSelectedTrack    ->Color());
+  ui->olxPlot->SetColorShapeMap(ui->pbxColorShapeMap ->Color());
 }
 
 
@@ -578,31 +584,31 @@ void MainWindow::PushSimMapTable()
   T_ObelixMapPoint lSinglePointTbl[5];
 
   // N
-  lSinglePointTbl[0].Latitude  = (41)/OBX_TRK_LATLONG_LSB;
-  lSinglePointTbl[0].Longitude = (-1)/OBX_TRK_LATLONG_LSB;
+  lSinglePointTbl[0].Latitude  = (49)/OBX_TRK_LATLONG_LSB;
+  lSinglePointTbl[0].Longitude = (-5)/OBX_TRK_LATLONG_LSB;
   sprintf(lSinglePointTbl[0].Label, "N");
 
   // E
-  lSinglePointTbl[1].Latitude  = (40)/OBX_TRK_LATLONG_LSB;
-  lSinglePointTbl[1].Longitude = (0)/OBX_TRK_LATLONG_LSB;
+  lSinglePointTbl[1].Latitude  = (48)/OBX_TRK_LATLONG_LSB;
+  lSinglePointTbl[1].Longitude = (-4)/OBX_TRK_LATLONG_LSB;
   sprintf(lSinglePointTbl[1].Label, "E");
 
 
   // S
-  lSinglePointTbl[2].Latitude  = (39)/OBX_TRK_LATLONG_LSB;
-  lSinglePointTbl[2].Longitude = (-1)/OBX_TRK_LATLONG_LSB;
+  lSinglePointTbl[2].Latitude  = (47)/OBX_TRK_LATLONG_LSB;
+  lSinglePointTbl[2].Longitude = (-5)/OBX_TRK_LATLONG_LSB;
   sprintf(lSinglePointTbl[2].Label, "S");
 
 
   // W
-  lSinglePointTbl[3].Latitude  = (40)/OBX_TRK_LATLONG_LSB;
-  lSinglePointTbl[3].Longitude = (-2)/OBX_TRK_LATLONG_LSB;
+  lSinglePointTbl[3].Latitude  = (48)/OBX_TRK_LATLONG_LSB;
+  lSinglePointTbl[3].Longitude = (-6)/OBX_TRK_LATLONG_LSB;
   sprintf(lSinglePointTbl[3].Label, "W");
 
 
   // W
-  lSinglePointTbl[4].Latitude  = (41)/OBX_TRK_LATLONG_LSB;
-  lSinglePointTbl[4].Longitude = (-2)/OBX_TRK_LATLONG_LSB;
+  lSinglePointTbl[4].Latitude  = (49)/OBX_TRK_LATLONG_LSB;
+  lSinglePointTbl[4].Longitude = (-6)/OBX_TRK_LATLONG_LSB;
   sprintf(lSinglePointTbl[4].Label, "WNW");
 
 
@@ -614,8 +620,8 @@ void MainWindow::PushSimMapTable()
   T_ObelixMapPoint lPolyPointTbl[10];
   for (int i=0; i<lPolySize; i++)
   {
-    lPolyPointTbl[i].Latitude   = (40.0 + (rand()%100)*0.01)/OBX_TRK_LATLONG_LSB;
-    lPolyPointTbl[i].Longitude = (-2.0 + (rand()%100)*0.01)/OBX_TRK_LATLONG_LSB;
+    lPolyPointTbl[i].Latitude   = (48.0 + (rand()%100)*0.01)/OBX_TRK_LATLONG_LSB;
+    lPolyPointTbl[i].Longitude = (-5.0 + (rand()%100)*0.01)/OBX_TRK_LATLONG_LSB;
   }
   mObelixSimThread->PushMapObject(1,OBX_MAP_POLY,lPolyPointTbl,lPolySize);
 
@@ -733,3 +739,11 @@ void MainWindow::on_ckxDispTracksHistory_stateChanged(int arg1)
   Q_UNUSED(arg1);
     ui->olxPlot->SetDisplayTracksHistory(ui->ckxDispTracksHistory->isChecked());
 }
+
+void MainWindow::on_ckxDispShapeMap_stateChanged(int arg1)
+{
+  Q_UNUSED(arg1);
+    ui->olxPlot->SetDisplayShapeMap(ui->ckxDispShapeMap->isChecked());
+}
+
+

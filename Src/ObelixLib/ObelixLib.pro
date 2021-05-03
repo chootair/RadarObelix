@@ -16,9 +16,18 @@ DLLDESTDIR = $${ROOT_FOLDER}/Bin
 TARGET = ObelixLib$${SUFFIX}
 TEMPLATE = lib
 
+
+# ----------------------------------------------------------
+# EXTERNAL LIBS
+shapelib {
+INCLUDEPATH += $${SHAPELIB_DIR}
+LIBS        += -L$${SHAPELIB_BINDIR} -lshp
+}
+
 # ----------------------------------------------------------
 # SOURCES
 SOURCES +=  \
+  MapManager.cpp \
   ObelixClient1090Thread.cpp \
   PresistImage.cpp \
   ObelixPlotWidget.cpp \
@@ -31,6 +40,7 @@ SOURCES +=  \
 # ----------------------------------------------------------
 # HEADERS
 HEADERS +=  \
+  MapManager.h \
   ObelixClient1090Thread.h \
   PresistImage.h \
   Obelix.h \

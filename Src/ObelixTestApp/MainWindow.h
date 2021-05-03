@@ -129,6 +129,9 @@ private slots:
 
   void on_ckxDispTracksHistory_stateChanged(int arg1);
 
+  void on_ckxDispShapeMap_stateChanged(int arg1);
+
+
 private:
   void BuildSimTrackTable();
   void BuildSimCloudTable();

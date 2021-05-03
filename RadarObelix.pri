@@ -26,4 +26,13 @@ debug {
     DEFINES += QT_NO_DEBUG_OUTPUT
 }
 
+# ----------------------------------------------------------
+# USE SHAPE LIBRARY
+CONFIG += shapelib
 
+shapelib {
+message(Use Shapelib)
+DEFINES += USESHAPELIB
+SHAPELIB_DIR="C:\Data\Bibliotheques\shapelib-master"
+SHAPELIB_BINDIR="C:\Data\Bibliotheques\build-shapelib-master-Desktop_Qt_5_12_3_MSVC2017_64bit-Release\dll"
+}

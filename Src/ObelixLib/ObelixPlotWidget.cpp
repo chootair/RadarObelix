@@ -51,7 +51,8 @@ ObelixPlotWidget::ObelixPlotWidget(QWidget *parent) : QOpenGLWidget(parent)
   mScopeVideoImg = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
   mScopeTrackImg = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
   mToolsImg      = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
-  mMapImg        = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
+  mObelixMapImg  = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
+  mShapeMapImg   = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
   mHeadingImg    = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
   mWidgetImg     = new QImage(800, 800, QImage::Format_ARGB32_Premultiplied);
 
@@ -61,6 +62,9 @@ ObelixPlotWidget::ObelixPlotWidget(QWidget *parent) : QOpenGLWidget(parent)
   mPersistRatio = -1;
   mPersistMultiplyColor.setRgb(0,0,0);
   mPersistMode = PersistComposition;
+
+
+  mShapeMapManager = new MapManager();
   
   mLbxWidget = new QLabel("SCOPE RADAR", this);
   mLbxWidget->lower();
@@ -98,6 +102,7 @@ ObelixPlotWidget::ObelixPlotWidget(QWidget *parent) : QOpenGLWidget(parent)
   mDisplayAircraft = true;
   mDisplayMapPoints = true;
   mDisplayMapPolygons = true;
+  mDisplayShapeMap    = true;
   //
   mNorthUp = true;
   //
@@ -117,12 +122,14 @@ ObelixPlotWidget::ObelixPlotWidget(QWidget *parent) : QOpenGLWidget(parent)
   mColorHeading     = Qt::red;
   mColorMapPoints   = Qt::darkYellow;
   mColorMapPolygons = Qt::darkRed;
+  mColorMapShape    = Qt::darkMagenta;
   mColorPlateformHistory = Qt::darkYellow;
   mColorTracksHistory    = Qt::darkGray;
   mColorSelectedTrack    = Qt::magenta;
 
 
   mNeedToPaintInfo = true;
+  mNeedToPaintShapeMap = true;
 
 
 }
@@ -140,6 +147,10 @@ ObelixPlotWidget::~ObelixPlotWidget()
   delete mFifoObelixMap.mFifoLocker;
   delete mFifoObelixMap.mFifoIndexPtr;
   free(mFifoObelixMap.mFifoPtr);
+
+  //
+  delete mShapeMapManager;
+
 }
 
 void ObelixPlotWidget::RefreshScope()
@@ -176,14 +187,24 @@ void ObelixPlotWidget::ClearScope()
   mScopeTrackImg->fill(0x00000000);
   mHeadingImg->fill(0x00000000);
   mToolsImg->fill(0x00000000);
-  mMapImg->fill(0x00000000);
+  mObelixMapImg->fill(0x00000000);
+  mShapeMapImg->fill(0x00000000);
   mPersistImg->fill(0xFF000000);
 
   //
   mNeedToPaintInfo=true;
+  mNeedToPaintShapeMap = true;
 
   //
   RefreshScope();
+}
+
+bool ObelixPlotWidget::AddShapeMapFile(QString pShapeFilename)
+{
+  mShapeMapManager->LoadShapeFile(pShapeFilename);
+
+  //
+  return true;
 }
 
 void ObelixPlotWidget::SetPresistenceRatio(double pRatio)
@@ -228,8 +249,11 @@ void ObelixPlotWidget::SetMyGeometry()
   delete mToolsImg;
   mToolsImg = new QImage(width(), height(), QImage::Format_ARGB32_Premultiplied);
   //
-  delete mMapImg;
-  mMapImg = new QImage(width(), height(), QImage::Format_ARGB32_Premultiplied);
+  delete mObelixMapImg;
+  mObelixMapImg = new QImage(width(), height(), QImage::Format_ARGB32_Premultiplied);
+  //
+  delete mShapeMapImg;
+  mShapeMapImg = new QImage(width(), height(), QImage::Format_ARGB32_Premultiplied);
   //
   delete mScopeTrackImg;
   mScopeTrackImg = new QImage(width(), height(), QImage::Format_ARGB32_Premultiplied);
@@ -240,7 +264,8 @@ void ObelixPlotWidget::SetMyGeometry()
   mScopeTrackImg->fill(0x00000000);
   mHeadingImg->fill(0x00000000);
   mToolsImg->fill(0x00000000);
-  mMapImg->fill(0x00000000);
+  mObelixMapImg->fill(0x00000000);
+  mShapeMapImg->fill(0x00000000);
 
   //
   mNeedToPaintInfo=true;
@@ -654,7 +679,7 @@ void ObelixPlotWidget::PaintTools(QPainter *pPainter)
   }
 }
 
-void ObelixPlotWidget::PaintMap(QPainter *pPainter)
+void ObelixPlotWidget::PaintObelixMap(QPainter *pPainter)
 {
   // Translate painter
   //pPainter->translate(mXCtr,mYCtr);
@@ -773,6 +798,63 @@ void ObelixPlotWidget::PaintMap(QPainter *pPainter)
 }
 
 
+void ObelixPlotWidget::PaintShapeMap(QPainter *pPainter)
+{
+  double lAzimuthOffsetRad = 0;
+
+  double lPixelRatio = mPlotRad/(mRangeNm * OTB::NM_TO_M);
+
+  // Heading Up
+  //if (mNorthUp == false)
+  //{
+  //  lAzimuthOffsetRad = -mLastHeadingDeg*OTB::DEG_TO_RAD;
+  //}
+
+  //
+  mShapeMapCenterLat = mLastMapPlatformLatitude;
+  mShapeMapCenterLon = mLastMapPlatformLongitude;
+
+
+
+  // Get objects in area
+  QList<T_ShapeMapObject> lShapeMapObjectList = mShapeMapManager->GetObjectInRange(mLastMapPlatformLongitude,mLastMapPlatformLatitude,200);
+
+  // Loop on shape map manager objects
+  foreach (T_ShapeMapObject lShapeObject, lShapeMapObjectList)
+  {
+    QPolygon polygon;
+
+    // Default
+    pPainter->setPen(Qt::red);
+    pPainter->setPen(QPen(QBrush(mColorMapPoints),5));
+
+    foreach (T_ShapeMapPoint lPlotPoint, lShapeObject.Points)
+    {
+      double lPtAz = 0;
+      double lPtDist = 0;
+
+      OTB::ComputeAzimuthDistance(mLastMapPlatformLatitude, mLastMapPlatformLongitude, lPlotPoint.Latitude, lPlotPoint.Longitude, lPtAz, lPtDist);
+
+      if (lPtDist > (400*OTB::NM_TO_M))
+      {
+        continue;
+      }
+
+      lPtDist = lPtDist * lPixelRatio;
+      lPtAz   = lPtAz * OTB::DEG_TO_RAD;
+
+      // Point Position
+      int lPtX = width()/2  + static_cast<int>(lPtDist * sin(lAzimuthOffsetRad + lPtAz));
+      int lPtY = height()/2 - static_cast<int>(lPtDist * cos(lAzimuthOffsetRad + lPtAz));
+
+      polygon.append(QPoint(lPtX, lPtY));
+    }
+
+
+    pPainter->setPen(mColorMapShape);
+    pPainter->drawPolyline(polygon);
+  }
+}
 
 
 QVector<QPointF> ObelixPlotWidget::BuildHistroryLine(T_History pHistory, double pAzimuthOffsetRad)
@@ -909,12 +991,59 @@ void ObelixPlotWidget::PaintControl()
   lWidgetPainter.drawImage(0, 0, *mToolsImg);
 
 
-  // Map
+  // Obelix Map
   {
-    QPainter lMapPainter(mMapImg);
-    mMapImg->fill(0x00000000);
-    PaintMap(&lMapPainter);
-    lWidgetPainter.drawImage(0, 0, *mMapImg);
+    QPainter lMapPainter(mObelixMapImg);
+    mObelixMapImg->fill(0x00000000);
+    PaintObelixMap(&lMapPainter);
+    lWidgetPainter.drawImage(0, 0, *mObelixMapImg);
+  }
+
+  // Shape Map
+  if (mDisplayShapeMap)
+  {
+    double lPtAz = 0;
+    double lPtDist = 0;
+
+    OTB::ComputeAzimuthDistance(mLastMapPlatformLatitude, mLastMapPlatformLongitude, mShapeMapCenterLat, mShapeMapCenterLon, lPtAz, lPtDist);
+
+    if (lPtDist > 50*OTB::NM_TO_M)
+    {
+      mNeedToPaintShapeMap = true;
+    }
+
+
+    if (mNeedToPaintShapeMap == true)
+    {
+    QPainter lShapeMapPainter(mShapeMapImg);
+    mShapeMapImg->fill(0x00000000);
+    PaintShapeMap(&lShapeMapPainter);
+    mNeedToPaintShapeMap = false;
+    }
+
+
+    OTB::ComputeAzimuthDistance(mLastMapPlatformLatitude, mLastMapPlatformLongitude, mShapeMapCenterLat, mShapeMapCenterLon, lPtAz, lPtDist);
+
+    double lPixelRatio = mPlotRad/(mRangeNm * OTB::NM_TO_M);
+    lPtDist = lPtDist * lPixelRatio;
+    lPtAz   = lPtAz * OTB::DEG_TO_RAD;
+
+    int xOffset = -width()/2 + static_cast<int>(lPtDist * sin(lPtAz));
+    int yOffset = -height()/2 - static_cast<int>(lPtDist * cos(lPtAz));
+    double aOffset = 0;
+
+    // Heading Up
+    if (mNorthUp == false)
+    {
+      aOffset = -mLastHeadingDeg;
+    }
+
+    lWidgetPainter.save();
+    lWidgetPainter.translate(width()/2,height()/2);
+    lWidgetPainter.rotate(aOffset);
+
+    lWidgetPainter.drawImage(xOffset, yOffset, *mShapeMapImg);
+    lWidgetPainter.restore();
   }
 
   // Paint heading
