@@ -69,10 +69,17 @@ void ObelixUdpPlotWidget::Start(int pRefershPeriodMsec)
 
 void ObelixUdpPlotWidget::Stop()
 {
+  mTimer->stop();
+  //
   mObelixUdpReaderVideo->AskForStop();
   mObelixUdpReaderTrack->AskForStop();
   mObelixUdpReaderMap->AskForStop();
-  mTimer->stop();
+  //
+  Sleep(200);
+  //
+  mObelixUdpReaderVideo->wait();
+  mObelixUdpReaderTrack->wait();
+  mObelixUdpReaderMap->wait();
 }
 
 void ObelixUdpPlotWidget::OnTimerTick()

@@ -130,7 +130,7 @@ void ObelixUdpSim::SendTrackTable()
      lTrackReport.TrackCount++;
 
      // Message full or end of table?
-     if ((lTrackReport.TrackCount >= OBX_TRK_TBL_CNT) || (lTrackIter == mTrackTbl->end()))
+     if ((lTrackReport.TrackCount >= OBX_TRK_TBL_CNT) || (lTrackIter == (mTrackTbl->end()-1)))
      {
        // Write message datagram
        lWriteSz = mTrackUdpSocket->writeDatagram((char*)&(lTrackReport),sizeof(T_ObelixTrackReportMessage), mTrackIp, mTrackPort);

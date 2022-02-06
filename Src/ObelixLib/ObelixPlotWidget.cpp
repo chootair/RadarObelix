@@ -478,6 +478,12 @@ void ObelixPlotWidget::PaintTrackPlots(QPainter *pPainter)
   foreach (T_PlotTrack lPlotTrack, mTrackTable)
   {
 
+    // Skip track outside display range
+    if (lPlotTrack.Track.Distance*OBX_TRK_DISTANCE_LSB > mRangeNm)
+    {
+      continue;
+    }
+
     // Old Track -> Force to change its status
 
     // Very Old Track -> Remove
